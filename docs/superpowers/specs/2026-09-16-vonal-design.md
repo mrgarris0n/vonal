@@ -172,6 +172,22 @@ plates because no variant reaches 7, so it never collides.
 error. It is the only header. There is no `%palette` directive, because there is
 only one palette, and no `%entry`, because entry is fixed by convention (§3).
 
+**Line sigils collide with the glyph alphabet, so the grammar disambiguates them
+explicitly.** `#` is the square and `%` the rhombus, so a naive "lines starting
+with `#` are comments, lines starting with `%` are directives" rule silently
+discards a row whose first cell is a square and rejects one whose first cell is a
+rhombus. The rule is therefore:
+
+- a line is a **directive** iff it matches `^%plate\s+(\d+)x(\d+)\s*$` exactly;
+- a line is a **comment** iff, stripped, it is exactly `#` or begins with `# `;
+- every other non-blank line is a grid row.
+
+Two diagnostic costs follow and are accepted: `#comment` without a space is a
+parse error rather than a comment, and a mistyped directive such as `%plat 3x1`
+is reported as a malformed cell rather than as a bad directive. Moving comments
+to a sigil outside the glyph alphabet would not help — `%` is a glyph too, so the
+exact-match directive rule is needed either way.
+
 Defaulting carries real weight. Void cells are most of a real plate, and `....`
 costs nothing while keeping columns square. Because ground colour has no
 semantics, logic can be written with every ground left `.` and the colour field
