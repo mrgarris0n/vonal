@@ -41,15 +41,11 @@ def parse(text: str) -> Plate:
 
     for line_no, raw in enumerate(text.splitlines(), start=1):
         stripped = raw.strip()
-        if not stripped or stripped.startswith("#"):
+        if not stripped or stripped.startswith("# "):
             continue
-        if stripped.startswith("%"):
-            match = _HEADER.match(stripped)
-            if match is None:
-                raise CompileError(
-                    line_no, 1, f"unknown directive {stripped!r}; expected %plate WxH"
-                )
-            declared = (int(match.group(1)), int(match.group(2)))
+        header_match = _HEADER.match(stripped)
+        if header_match:
+            declared = (int(header_match.group(1)), int(header_match.group(2)))
             continue
         rows.append(
             tuple(
@@ -77,3 +73,18 @@ def parse(text: str) -> Plate:
             f"header declares {declared[0]}x{declared[1]} but the grid is {width}x{height}",
         )
     return Plate(width, height, tuple(rows))
+
+
+def _token(cell: Cell) -> str:
+    # A void cell's variant and scale are always 0 and are not drawn, so they are
+    # written as dots rather than as the zeroes the model holds.
+    if cell.is_void:
+        return f"...{cell.ground}"
+    return f"{cell.form.value}{cell.variant}{cell.scale}{cell.ground}"
+
+
+def emit(plate: Plate) -> str:
+    """Render a Plate back to .vsr source."""
+    lines = [f"%plate {plate.width}x{plate.height}", ""]
+    lines.extend("  ".join(_token(cell) for cell in row) for row in plate.cells)
+    return "\n".join(lines) + "\n"
