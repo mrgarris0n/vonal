@@ -74,3 +74,35 @@ def test_void_with_a_nonzero_channel_is_a_compile_error(token):
 def test_missing_header_is_a_compile_error():
     with pytest.raises(CompileError, match="%plate"):
         parse("o.17\n")
+
+
+def test_square_glyph_can_start_a_row():
+    # SQUARE form glyph '#' can start a row and should not be treated as a comment.
+    plate = parse("%plate 1x1\n\n#075\n")
+    cell = plate.at(0, 0)
+    assert cell.form is Form.SQUARE
+    assert (cell.variant, cell.scale, cell.ground) == (0, 7, 5)
+
+
+def test_rhombus_glyph_can_start_a_row():
+    # RHOMBUS form glyph '%' can start a row and should not be treated as a directive.
+    plate = parse("%plate 1x1\n\n%142\n")
+    cell = plate.at(0, 0)
+    assert cell.form is Form.RHOMBUS
+    assert (cell.variant, cell.scale, cell.ground) == (1, 4, 2)
+
+
+def test_comment_line_with_hash_space_is_ignored():
+    # A line starting with '# ' (hash-space) is a comment.
+    plate = parse("%plate 1x1\n\n# this is a comment\n#075\n")
+    cell = plate.at(0, 0)
+    assert cell.form is Form.SQUARE
+    assert (cell.variant, cell.scale, cell.ground) == (0, 7, 5)
+
+
+def test_bare_hash_is_a_comment():
+    # A line containing only '#' is a comment.
+    plate = parse("%plate 1x1\n\n#\n#075\n")
+    cell = plate.at(0, 0)
+    assert cell.form is Form.SQUARE
+    assert (cell.variant, cell.scale, cell.ground) == (0, 7, 5)

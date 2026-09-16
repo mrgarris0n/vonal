@@ -41,7 +41,7 @@ def parse(text: str) -> Plate:
 
     for line_no, raw in enumerate(text.splitlines(), start=1):
         stripped = raw.strip()
-        if not stripped or stripped.startswith("# "):
+        if not stripped or stripped == "#" or stripped.startswith("# "):
             continue
         header_match = _HEADER.match(stripped)
         if header_match:
