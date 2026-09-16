@@ -103,10 +103,11 @@ it encodes comparison and needs no direction.
 Any `(form, variant)` pair not listed is a **load error**, not a no-op (§7).
 
 A void cell carries no form, so neither its variant nor its scale is
-representable in the image. Its variant is ignored, and its scale is **defined to
-be 0** — `get` on a void cell yields 0, and a non-zero scale on a void cell is a
-compile error. Without this rule the image could not round-trip a plate
-faithfully (§9).
+representable in the image. **Both are defined to be 0** — `get` on a void cell
+yields 0, and a non-zero variant or scale on a void cell is a compile error.
+Without this rule the image could not round-trip a plate faithfully (§9): the
+decoder has no way to recover a value the renderer never drew, so the model must
+not admit one.
 
 ### 4.1 Operation semantics
 
@@ -155,11 +156,17 @@ whitespace; rows by newlines.
 ```
 %plate 5x2
 
-o.5.  +0..  ....  ....  ....
+o.57  +0.7  ....  ....  ....
 ....  ....  ....  ....  ....
 ```
 
-That is: push 5, print it, halt.
+That is: push 5, print it, halt. `o.57` is a disc, variant 0, scale 5, ground 7;
+`+0.7` is a cross, variant 0 (out num), ground 7.
+
+Both grounds are 7 rather than the default 0, and they have to be. A non-void
+cell's variant **is** its form colour, so `variant == ground` is invalid (§7) —
+the glyph would be invisible. Ground 7 is a convenient default for hand-written
+plates because no variant reaches 7, so it never collides.
 
 `%plate WxH` is a redundancy check — a mismatch with the actual grid is a compile
 error. It is the only header. There is no `%palette` directive, because there is
