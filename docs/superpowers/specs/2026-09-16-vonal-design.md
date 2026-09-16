@@ -314,9 +314,19 @@ Test-driven throughout, in descending order of confidence bought:
 1. **Round-trip properties** (Hypothesis). Generate arbitrary valid `Plate`s and
    assert `vsr → Plate → vsr` and `Plate → PNG → Plate` are both identity. This
    is what proves encode and decode are genuine inverses rather than merely
-   agreeing today. The generator must respect plate validity as §4 and §7 define
-   it — void cells at scale 0, and no non-void cell whose form and ground colours
-   match — since neither is representable in an image.
+   agreeing today.
+
+   The two round trips have **different domains**, and conflating them breaks the
+   image property. A *structurally valid* plate is one `Cell` accepts: void cells
+   at variant and scale 0, and no non-void cell whose form and ground colours
+   match. A *loadable* plate is additionally one whose every cell is a defined
+   instruction per §4's table. The text round trip holds over all structurally
+   valid plates, because `parse` and `emit` move digits and never consult the
+   instruction table. The image round trip holds only over loadable plates,
+   because §7 requires `decode` to reject an undefined `(form, variant)` pair —
+   a plate it must reject has no meaningful round trip. Only 34 of the 80
+   non-void pairs are defined, so a generator that ignores this produces
+   failures that are not defects.
 2. **ISA unit tests.** Table-driven, one per operation, asserting effects on
    stack, field and eye in isolation.
 3. **Golden programs.** A corpus of `.vsr` with expected stdout, run through the
