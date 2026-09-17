@@ -56,6 +56,20 @@ def test_digit_out_of_range_is_a_compile_error():
         parse("%plate 1x1\n\no.97\n")
 
 
+def test_superscript_digit_is_a_compile_error_not_a_bare_valueerror():
+    # '²'.isdigit() is True but int('²') raises ValueError; the parser must
+    # not let that traceback escape as anything but a CompileError.
+    with pytest.raises(CompileError, match="0-7"):
+        parse("%plate 1x1\n\no²17\n")
+
+
+def test_arabic_indic_digit_is_a_compile_error():
+    # '٣' (Arabic-Indic three) is accepted by int() as 3, which would widen
+    # the .vsr alphabet beyond ASCII '0'-'7'.
+    with pytest.raises(CompileError, match="0-7"):
+        parse("%plate 1x1\n\no٣17\n")
+
+
 def test_cell_validity_errors_carry_the_token_position():
     # o5.5: form colour 5 equals ground 5, so the glyph would be invisible.
     with pytest.raises(CompileError) as excinfo:

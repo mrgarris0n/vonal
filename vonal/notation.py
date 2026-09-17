@@ -14,7 +14,7 @@ _GLYPHS = {form.value: form for form in Form}
 def _digit(char: str, line: int, col: int, name: str) -> int:
     if char == ".":
         return 0
-    if not char.isdigit() or not 0 <= int(char) <= 7:
+    if char not in "01234567":
         raise CompileError(line, col, f"{name} must be '.' or a digit 0-7, got {char!r}")
     return int(char)
 
