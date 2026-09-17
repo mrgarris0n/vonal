@@ -152,6 +152,23 @@ def test_prime_survives_a_full_image_round_trip():
     assert round_trips("prime.vsr")
 
 
+@pytest.mark.parametrize(
+    "chars,largest",
+    [
+        ("abc", 99), ("acb", 99), ("bac", 99),
+        ("bca", 99), ("cab", 99), ("cba", 99),   # every ordering: both detours fire
+        ("aaa", 97), ("aab", 98), ("aba", 98), ("baa", 98),   # ties
+        ("Az0", 122), ("!~ ", 126),
+    ],
+)
+def test_span_prints_the_largest_and_its_negation(chars, largest):
+    assert output_of("span.vsr", stdin=chars) == f"{largest} {-largest}\n"
+
+
+def test_span_survives_a_full_image_round_trip():
+    assert round_trips("span.vsr")
+
+
 MIRROR_PROFILE = "1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 "
 
 
