@@ -54,3 +54,29 @@ def test_fibonacci_survives_a_full_image_round_trip():
 
 def test_collatz_survives_a_full_image_round_trip():
     assert round_trips("collatz.vsr")
+
+
+def test_vega_prints_five():
+    assert output_of("vega.vsr") == "5"
+
+
+def test_vega_survives_a_full_image_round_trip():
+    assert round_trips("vega.vsr")
+
+
+def test_vega_is_a_swell_and_not_a_flat_field():
+    # This plate exists to demonstrate that scale is a free compositional
+    # channel, so the gradient *is* the deliverable. A regeneration that
+    # flattened it would still print "5" and still round-trip, and the two
+    # tests above would both pass -- only this one would notice.
+    plate = notation.parse((EXAMPLES / "vega.vsr").read_text())
+    scales = {
+        plate.at(x, y).scale
+        for y in range(plate.height)
+        for x in range(plate.width)
+    }
+    assert len(scales) >= 7, f"gradient collapsed to {sorted(scales)}"
+
+    centre = plate.at(plate.width // 2, plate.height // 2).scale
+    corner = plate.at(plate.width - 1, plate.height - 1).scale
+    assert centre > corner, f"centre {centre} should swell above corner {corner}"

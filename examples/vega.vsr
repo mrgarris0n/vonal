@@ -1,0 +1,37 @@
+# vega: a working program inside a Vasarely swell
+#
+# The eye pushes 5, prints it, and halts on the void at (2,0) -- three cells,
+# top left. Every other cell on the plate is a disc, which is to say a PUSH
+# instruction, and none of them ever executes.
+#
+# Their scales are a radial gradient: largest at the centre, smallest at the
+# corners, so the flat lattice reads as a sphere bulging toward the viewer.
+# That is the Vega effect, and it costs nothing semantically -- a cell's scale
+# is read only by the PUSH family on the cell the eye is standing on, and by a
+# get aimed at its coordinates. This plate uses no get and the eye visits three
+# cells, so all 253 remaining scales are free composition.
+#
+# The three program cells are visible as a disturbance in the top-left of the
+# field: the code is where the swell breaks.
+#
+# Ground is cream (1) throughout and every form colour is black (0). A swell
+# wants a tight palette -- varied grounds would compete with the gradient
+# rather than support it.
+%plate 16x16
+
+o.51  +..1  ...1  o.11  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
+o..1  o.11  o.11  o.21  o.21  o.21  o.31  o.31  o.31  o.31  o.21  o.21  o.21  o.11  o.11  o..1
+o.11  o.11  o.21  o.21  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.21  o.21  o.11  o.11
+o.11  o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.41  o.41  o.41  o.31  o.31  o.21  o.21  o.11
+o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.51  o.51  o.41  o.41  o.41  o.31  o.31  o.21  o.21
+o.21  o.21  o.31  o.41  o.41  o.51  o.51  o.51  o.51  o.51  o.51  o.41  o.41  o.31  o.21  o.21
+o.21  o.31  o.31  o.41  o.41  o.51  o.61  o.61  o.61  o.61  o.51  o.41  o.41  o.31  o.31  o.21
+o.21  o.31  o.31  o.41  o.51  o.51  o.61  o.71  o.71  o.61  o.51  o.51  o.41  o.31  o.31  o.21
+o.21  o.31  o.31  o.41  o.51  o.51  o.61  o.71  o.71  o.61  o.51  o.51  o.41  o.31  o.31  o.21
+o.21  o.31  o.31  o.41  o.41  o.51  o.61  o.61  o.61  o.61  o.51  o.41  o.41  o.31  o.31  o.21
+o.21  o.21  o.31  o.41  o.41  o.51  o.51  o.51  o.51  o.51  o.51  o.41  o.41  o.31  o.21  o.21
+o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.51  o.51  o.41  o.41  o.41  o.31  o.31  o.21  o.21
+o.11  o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.41  o.41  o.41  o.31  o.31  o.21  o.21  o.11
+o.11  o.11  o.21  o.21  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.21  o.21  o.11  o.11
+o..1  o.11  o.11  o.21  o.21  o.21  o.31  o.31  o.31  o.31  o.21  o.21  o.21  o.11  o.11  o..1
+o..1  o..1  o.11  o.11  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
