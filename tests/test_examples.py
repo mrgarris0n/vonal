@@ -27,3 +27,19 @@ def test_countdown_counts_down_from_five():
 
 def test_countdown_survives_a_full_image_round_trip():
     assert round_trips("countdown.vsr")
+
+
+def test_fibonacci_prints_the_first_ten_terms():
+    assert output_of("fibonacci.vsr") == "1 1 2 3 5 8 13 21 34 55 "
+
+
+def test_collatz_prints_the_trajectory_of_six():
+    assert output_of("collatz.vsr") == "6 3 10 5 16 8 4 2 1 "
+
+
+def test_fibonacci_survives_a_full_image_round_trip():
+    assert round_trips("fibonacci.vsr")
+
+
+def test_collatz_survives_a_full_image_round_trip():
+    assert round_trips("collatz.vsr")

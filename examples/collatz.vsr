@@ -1,0 +1,36 @@
+# collatz: prints the trajectory of 6, "6 3 10 5 16 8 4 2 1 "
+#
+# Row 0 seeds n=6 and drops the eye into the loop. The turn at (1,0) sets
+# heading south, so the cell it lands on -- (1,1) -- must turn it east again
+# before the body runs: headings persist until a triangle changes them.
+#
+# Row 1 is the loop body and is exactly as wide as the plate, so running off
+# the east edge wraps straight back to its own start. Its first three cells
+# are all unconditional turn-east triangles, reached from three different
+# places: (0,1) is the wrap point every pass takes; (1,1) is where the seed's
+# southward drop lands on the very first pass; (2,1) is where the odd branch
+# (row 2) returns via a north-facing triangle. All three just reassert
+# heading east, so on an ordinary wrap they are three harmless no-ops before
+# the real body starts at (3,1) -- exactly the countdown plate's redundant
+# entry cell, tripled because this plate has three ways to enter the row.
+#
+# The body itself, stack holding [n]: DUP + OUT_NUM prints n; a literal space
+# (push 4, push_acc 0 -> 32) is printed; DUP + push 1 + EQ + TURN_IF exits
+# south when n is 1 -- into row 2's void gap at column 11, which halts on
+# landing; otherwise DUP + push 2 + MOD + TURN_IF deflects south when n is
+# odd, into row 2's column 15. The even path falls through to push 2 + DIV,
+# replacing n with n // 2, and wraps around to (0,1) for the next pass.
+#
+# Row 2 is void everywhere except two spans. Column 11, mid-void, is the halt
+# target for n == 1: any void cell halts the instant the eye lands on it, so
+# no special marker is needed there beyond simply not drawing a shape.
+# Columns 15-17 and 0-2 (wrapping across the row's own east edge) hold the
+# odd branch: an entry turn-east (needed for the same reason row 1's entry
+# cells are, since the drop from row 1 arrives heading south), then
+# push 3, mul, push 1, add computing 3n + 1, then a turn-north at column 2
+# that returns to row 1's column 2 -- the third of its entry triangles.
+%plate 18x3
+
+o.67  v..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
+>..7  >..7  >..7  %..7  +..7  o.47  o1.7  +1.7  %..7  o.17  D2.7  v1.7  %..7  o.27  #4.7  v1.7  o.27  #3.7
+o.17  #..7  ^..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  >..7  o.37  #2.7

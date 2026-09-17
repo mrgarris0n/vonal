@@ -1,0 +1,29 @@
+# fibonacci: prints the first ten terms, "1 1 2 3 5 8 13 21 34 55 "
+#
+# Row 0 seeds the pair (a, b) = (1, 1) and drops the eye into the loop. The
+# turn at (2,0) sets heading south, so the cell it lands on -- (2,1) -- must
+# turn it east again before the body runs: headings persist until a triangle
+# changes them.
+#
+# Row 1 is the loop body and is exactly as wide as the plate, so running off
+# the east edge wraps straight back to its own start. The pair lives entirely
+# on the stack as [a, b] with b on top; nothing else is ever pushed underneath
+# it, so no field storage is needed. Each pass:
+#   - OVER duplicates a to the top and OUT_NUM prints it, then a literal space
+#     (push 4, push_acc 0 -> 32) is printed;
+#   - a second OVER copies a again and it is compared against the literal 55
+#     (push 6, push_acc 7 -> 55) with EQ; TURN_IF turns south -- into the void
+#     row -- and halts once the term just printed was 55, the tenth term;
+#   - otherwise SWAP, OVER, ADD turns [a, b] into [b, a+b], and the pass wraps
+#     around to (2,1) to repeat with the advanced pair.
+# The wrap point sits at x=0/x=1 (OVER, ADD) rather than x=0 alone, because the
+# fixer at (2,1) has to land on the same column the seed's turn used -- column
+# 2, since the seed needed two cells (the two pushes of 1) before it could
+# turn. The two cells reached only by wrapping (never by the initial drop) are
+# exactly the tail of the update math, which has nothing useful to do until a
+# pass has already produced a fresh pair.
+%plate 14x3
+
+o.17  o.17  v..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
+%3.7  #..7  >..7  %3.7  +..7  o.47  o1.7  +1.7  %3.7  o.67  o177  D2.7  v1.7  %2.7
+...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
