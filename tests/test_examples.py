@@ -5,18 +5,23 @@ from pathlib import Path
 from PIL import Image
 
 from vonal import cli, decode, notation, render
+from vonal.cell import Cell
 from vonal.machine import Machine
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
 
-def output_of(name, max_steps=200_000):
-    plate = notation.parse((EXAMPLES / name).read_text())
+def output_of_plate(plate, max_steps=200_000, label="plate"):
     out = io.StringIO()
     machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
     machine.run(max_steps=max_steps)
-    assert machine.halted, f"{name} did not halt within {max_steps} steps"
+    assert machine.halted, f"{label} did not halt within {max_steps} steps"
     return out.getvalue()
+
+
+def output_of(name, max_steps=200_000):
+    plate = notation.parse((EXAMPLES / name).read_text())
+    return output_of_plate(plate, max_steps, name)
 
 
 def round_trips(name):
@@ -103,6 +108,37 @@ def test_kinetic_trace_frames_actually_differ(tmp_path):
     digests = {hashlib.sha256(f.read_bytes()).hexdigest() for f in frames}
     assert len(frames) > 1
     assert len(digests) == 8, f"expected 8 distinct frames, got {len(digests)}"
+
+
+MIRROR_PROFILE = "1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 "
+
+
+def test_mirror_prints_the_profile_of_its_own_swell():
+    assert output_of("mirror.vsr") == MIRROR_PROFILE
+
+
+def test_mirror_survives_a_full_image_round_trip():
+    assert round_trips("mirror.vsr")
+
+
+def test_mirror_reads_the_picture_rather_than_reciting_it():
+    # The claim this plate exists to make is that GET turns composition into
+    # data, so the output must be derived from the field and not spelled out
+    # somewhere in the program. Perturb one cell of the row being read: only
+    # that position of the output may move. A recited literal could not.
+    plate = notation.parse((EXAMPLES / "mirror.vsr").read_text())
+    before = output_of_plate(plate).split()
+    assert before[0] == "1"
+
+    original = plate.at(0, 7)
+    assert original.scale == 1
+    perturbed = plate.replaced(
+        0, 7, Cell(original.form, original.variant, 7, original.ground)
+    )
+    after = output_of_plate(perturbed).split()
+
+    assert after[0] == "7", "the first column's scale was not read from the plate"
+    assert after[1:] == before[1:], "perturbing one cell disturbed other columns"
 
 
 def test_vega_is_a_swell_and_not_a_flat_field():

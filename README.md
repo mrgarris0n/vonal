@@ -98,6 +98,15 @@ nothing and must have scale 0, so the padding is unreached push discs instead.
 `vonal trace` on it produces frames that differ. Every other plate traces to the
 same image repeated.
 
+`examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
+scales stop being composition and become the program's input: it prints the
+profile of its own sphere. The same pixels are decoration or data depending only
+on whether anything reads them.
+
+That is the only self-reference available. The field is built from the scale
+channel alone and no opcode exposes a cell's form or variant, so a program can
+read its own data but never its own code. A quine is impossible.
+
 ## Examples
 
 | Plate | Output |
@@ -108,6 +117,7 @@ same image repeated.
 | `vega` | `5`, inside a swell |
 | `hello` | `Hello, World!` |
 | `kinetic` | nothing; it draws a staircase into its own field |
+| `mirror` | the profile of its own swell, read back with `get` |
 
 ```bash
 .venv/bin/pytest
