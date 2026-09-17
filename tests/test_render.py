@@ -11,12 +11,31 @@ def test_extent_spans_eight_to_fifty_and_always_centres_on_an_integer():
         assert (render.CELL - length) % 2 == 0
 
 
-def test_every_glyph_leaves_ground_visible_at_the_corners():
-    # The decoder identifies ground by the corner pixel, so this must always hold.
+def test_every_glyph_leaves_ground_visible_at_all_four_corners_at_every_scale():
+    # The decoder identifies ground by the corner pixel (0,0), so this must
+    # hold everywhere it's relied on. The previous version of this test
+    # checked byte 0 (top-left) and byte CELL-1 -- which is the *top-right*
+    # corner of a row-major CELL*CELL buffer, not bottom-right -- so both
+    # bottom corners went unchecked, and only the largest scale was tried.
+    top_left, top_right = 0, render.CELL - 1
+    bottom_left = (render.CELL - 1) * render.CELL
+    bottom_right = render.CELL * render.CELL - 1
+    corners = (top_left, top_right, bottom_left, bottom_right)
     for form in (f for f in Form if f is not Form.VOID):
-        block = render.template(form, 7)
-        assert block[0] == render.GROUND
-        assert block[render.CELL - 1] == render.GROUND
+        for scale in range(8):
+            block = render.template(form, scale)
+            for corner in corners:
+                assert block[corner] == render.GROUND
+
+
+def test_every_template_contains_both_a_form_and_a_ground_pixel():
+    # This is what stops a glyph decoding as void: decode() treats a cell
+    # showing a single colour as void (decode.py), so a template that never
+    # draws any FORM pixel at all -- or is FORM everywhere, leaving no
+    # ground -- would be indistinguishable from void, or fail to decode.
+    for mask in render.TEMPLATES:
+        assert render.FORM in mask
+        assert render.GROUND in mask
 
 
 def test_template_table_has_eighty_entries_and_excludes_void():
