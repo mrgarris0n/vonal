@@ -1,12 +1,15 @@
 # countdown: prints 54321
 #
-# Row 0 seeds the counter and drops the eye into the loop.
-# Row 1 is the loop body; it is exactly as wide as the plate, so running off the
+# Row 0 seeds the counter and drops the eye into the loop. The turn at (1,0)
+# sets the heading south, so the cell it lands on -- (1,1) -- must turn it east
+# again before the body runs: headings persist until a triangle changes them.
+#
+# Row 1 is the loop body and is exactly as wide as the plate, so running off the
 # east edge wraps straight back to its own start. The guard at x=0 is the exit:
 # once the decremented counter reaches zero it turns south into row 2, which is
 # void, and the machine halts.
-%plate 6x3
+%plate 7x3
 
-o.57  v0.7  ....  ....  ....  ....
-v2.7  %0.7  +0.7  o.17  #1.7  %0.7
-....  ....  ....  ....  ....  ....
+o.57  v0.7  ....  ....  ....  ....  ....
+v2.7  >0.7  %0.7  +0.7  o.17  #1.7  %0.7
+....  ....  ....  ....  ....  ....  ....
