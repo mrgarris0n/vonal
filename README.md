@@ -33,6 +33,7 @@ vonal compile     src.vsr out.png     # text source to canonical image (.png onl
 vonal disassemble in.png [out.vsr]    # image back to text
 vonal run         plate [--max-steps N]   # accepts .vsr or .png
 vonal trace       plate outdir/       # one PNG frame per step
+vonal trace       plate anim.gif     # or an animated GIF (--frame-ms N)
 ```
 
 ## Notation
@@ -99,7 +100,9 @@ nothing and must have scale 0, so the padding is unreached push discs instead.
 
 `examples/kinetic.vsr` goes the other way and writes the field as it runs, so
 `vonal trace` on it produces frames that differ. Every other plate traces to the
-same image repeated.
+same image repeated. `examples/kinetic.gif` is that trace animated: runs of
+identical frames are collapsed into one held proportionally longer, so the file
+stays small without the timing changing.
 
 `examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
 scales stop being composition and become the program's input: it prints the

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -20,7 +21,8 @@ def _load(path: Path) -> Plate:
         plate = notation.parse(path.read_text())
         isa.validate(plate)
         return plate
-    return decode.decode(Image.open(path))
+    with Image.open(path) as image:
+        return decode.decode(image)
 
 
 def _with_field(plate: Plate, field: list[list[int]]) -> Plate:
@@ -55,7 +57,8 @@ def _cmd_compile(args: argparse.Namespace) -> int:
 
 
 def _cmd_disassemble(args: argparse.Namespace) -> int:
-    text = notation.emit(decode.decode(Image.open(args.image)))
+    with Image.open(args.image) as image:
+        text = notation.emit(decode.decode(image))
     if args.out:
         Path(args.out).write_text(text)
     else:
@@ -68,17 +71,66 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _trace_frames(plate: Plate, max_steps: int) -> Iterator[Image.Image]:
+    """The plate as rendered before each step, until it halts or hits the cap."""
+    machine = Machine(plate)
+    while True:
+        yield render.render(_with_field(plate, machine.field))
+        if machine.steps >= max_steps or not machine.step():
+            return
+
+
+def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
+    """Write one animated GIF, collapsing runs of identical frames.
+
+    Most plates never write the field, so most frames are byte-identical to
+    their predecessor: a 99-step trace of `kinetic` holds only 8 distinct
+    images. Emitting all 99 would bloat the file for no visible gain, so a run
+    of identical frames becomes one frame held proportionally longer. The
+    animation therefore keeps its real timing -- a stretch where the picture
+    does not change still takes as long as it did -- while the file stays the
+    size of the change.
+    """
+    kept: list[Image.Image] = []
+    holds: list[int] = []
+    previous: bytes | None = None
+    for frame in frames:
+        raw = frame.tobytes()
+        if raw == previous:
+            holds[-1] += 1
+        else:
+            kept.append(frame)
+            holds.append(1)
+            previous = raw
+
+    # A plate uses at most the 8 palette colours, so an adaptive 8-colour
+    # palette is exact. Dithering would invent colours the palette does not
+    # contain, which is the one thing this format must not do.
+    paletted = [
+        f.convert("P", dither=Image.Dither.NONE, palette=Image.Palette.ADAPTIVE, colors=8)
+        for f in kept
+    ]
+    paletted[0].save(
+        path,
+        save_all=True,
+        append_images=paletted[1:],
+        duration=[h * frame_ms for h in holds],
+        loop=0,
+    )
+
+
 def _cmd_trace(args: argparse.Namespace) -> int:
     plate = _load(Path(args.plate))
     out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
-    machine = Machine(plate)
-    frame = 0
-    while True:
-        render.render(_with_field(plate, machine.field)).save(out / f"{frame:05d}.png")
-        frame += 1
-        if machine.steps >= args.max_steps or not machine.step():
-            break
+    frames = _trace_frames(plate, args.max_steps)
+    if out.suffix.lower() == ".gif":
+        _save_gif(frames, out, args.frame_ms)
+    else:
+        # A directory keeps one PNG per step, numbered, for stepping through by
+        # hand. No collapsing here: a step that changes nothing is still a step.
+        out.mkdir(parents=True, exist_ok=True)
+        for n, frame in enumerate(frames):
+            frame.save(out / f"{n:05d}.png")
     return 0
 
 
@@ -101,10 +153,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-steps", type=int, default=None)
     p.set_defaults(func=_cmd_run)
 
-    p = sub.add_parser("trace", help="write one frame per step to a directory")
+    p = sub.add_parser(
+        "trace",
+        help="write one frame per step: a directory of PNGs, or an animated .gif",
+    )
     p.add_argument("plate")
-    p.add_argument("out")
+    p.add_argument("out", help="a directory, or a path ending .gif to animate")
     p.add_argument("--max-steps", type=int, default=1000)
+    p.add_argument(
+        "--frame-ms", type=int, default=100, help="milliseconds per step in a .gif"
+    )
     p.set_defaults(func=_cmd_trace)
 
     args = parser.parse_args(argv)

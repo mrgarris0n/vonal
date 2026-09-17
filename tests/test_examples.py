@@ -3,7 +3,7 @@ import io
 from pathlib import Path
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageSequence
 
 from vonal import cli, decode, notation, render
 from vonal.cell import Cell
@@ -36,7 +36,8 @@ def round_trips(name):
     if decode.decode(render.render(plate)) != plate:
         return False
     png_path = (EXAMPLES / name).with_suffix(".png")
-    return decode.decode(Image.open(png_path)) == plate
+    with Image.open(png_path) as image:
+        return decode.decode(image) == plate
 
 
 def test_countdown_counts_down_from_five():
@@ -150,6 +151,24 @@ def test_prime_decides_correctly(n, expected):
 
 def test_prime_survives_a_full_image_round_trip():
     assert round_trips("prime.vsr")
+
+
+def test_the_shipped_kinetic_gif_is_not_stale(tmp_path):
+    # examples/kinetic.gif is committed so the animation is visible without
+    # running anything, which means it can drift from the plate exactly as the
+    # PNGs could. Regenerate and compare what matters: the number of distinct
+    # frames, and the field the last one shows.
+    fresh = tmp_path / "fresh.gif"
+    assert cli.main(["trace", str(EXAMPLES / "kinetic.vsr"), str(fresh)]) == 0
+
+    def summary(path):
+        with Image.open(path) as im:
+            frames = [f.convert("RGB") for f in ImageSequence.Iterator(im)]
+        last = decode.decode(frames[-1])
+        return len(frames), [last.at(x, 5).scale for x in range(8)]
+
+    assert summary(EXAMPLES / "kinetic.gif") == summary(fresh)
+    assert summary(fresh) == (8, [0, 1, 2, 3, 4, 5, 6, 7])
 
 
 @pytest.mark.parametrize(

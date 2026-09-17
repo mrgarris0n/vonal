@@ -1,5 +1,7 @@
+from pathlib import Path
+
 import pytest
-from PIL import Image
+from PIL import Image, ImageSequence
 
 from vonal import decode, notation, render
 from vonal.cli import main
@@ -37,6 +39,60 @@ def test_disassemble_round_trips_the_source(tmp_path):
     assert back.read_text() == HELLO
 
 
+KINETIC = Path(__file__).resolve().parent.parent / "examples" / "kinetic.vsr"
+
+
+def _gif_durations(path):
+    with Image.open(path) as im:
+        out = []
+        while True:
+            out.append(im.info["duration"])
+            try:
+                im.seek(im.tell() + 1)
+            except EOFError:
+                return out
+
+
+def test_trace_to_a_gif_collapses_runs_of_identical_frames(tmp_path):
+    gif = tmp_path / "k.gif"
+    assert main(["trace", str(KINETIC), str(gif)]) == 0
+    # kinetic runs 99 steps but only writes the field 8 times, and writing 0
+    # into a cell already at 0 changes no pixels. One frame per distinct image.
+    assert len(_gif_durations(gif)) == 8
+
+
+def test_trace_gif_keeps_the_real_timing_despite_collapsing(tmp_path):
+    # Collapsing must not speed the animation up: a stretch where the picture
+    # does not change still has to take as long as it did.
+    gif = tmp_path / "k.gif"
+    main(["trace", str(KINETIC), str(gif), "--frame-ms", "40"])
+    frames = tmp_path / "frames"
+    main(["trace", str(KINETIC), str(frames)])
+    steps = len(list(frames.glob("*.png")))
+    assert sum(_gif_durations(gif)) == steps * 40
+
+
+def test_trace_gif_is_lossless_and_ends_on_the_finished_staircase(tmp_path):
+    # GIF is paletted, so the risk is quantisation inventing a colour outside
+    # vasarely-8 and making the frames undecodable. Every frame must still be
+    # a legal plate, and the last must show the field the program drew.
+    gif = tmp_path / "k.gif"
+    main(["trace", str(KINETIC), str(gif)])
+    with Image.open(gif) as im:
+        frames = [f.convert("RGB") for f in ImageSequence.Iterator(im)]
+    plates = [decode.decode(f) for f in frames]          # raises if any colour drifted
+    assert [plates[-1].at(x, 5).scale for x in range(8)] == [0, 1, 2, 3, 4, 5, 6, 7]
+    assert [plates[0].at(x, 5).scale for x in range(8)] == [0] * 8
+
+
+def test_trace_gif_of_a_plate_that_never_writes_the_field_is_one_frame(tmp_path):
+    gif = tmp_path / "c.gif"
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    assert main(["trace", str(src), str(gif)]) == 0
+    assert len(_gif_durations(gif)) == 1
+
+
 def test_compile_refuses_a_lossy_output_format(tmp_path, capsys):
     src = tmp_path / "hello.vsr"
     src.write_text(HELLO)
@@ -55,8 +111,8 @@ def test_a_jpeg_of_a_plate_really_is_unloadable(tmp_path):
     plate = notation.parse(HELLO)
     jpg = tmp_path / "plate.jpg"
     render.render(plate).save(jpg)
-    with pytest.raises(LoadError, match="not in the palette"):
-        decode.decode(Image.open(jpg))
+    with Image.open(jpg) as image, pytest.raises(LoadError, match="not in the palette"):
+        decode.decode(image)
 
 
 def test_disassemble_without_an_output_path_writes_to_stdout(tmp_path, capsys):
