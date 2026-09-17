@@ -15,8 +15,10 @@
 # so the padding was replaced. Ground is 6 throughout. No form, no
 # variant and no reachable scale changed.
 #
+#
+# Ends with a newline: push 1, push_acc 2 makes 10, then OUT_CHAR.
 %plate 7x3
 
 o.56  v.56  o.56  o.76  o.56  o.26  o..6
 v226  >.46  %.66  +.76  o.16  #166  %.46
-...6  o.26  o.56  o.76  o.56  o.26  o..6
+>..6  o.16  o126  +1.6  ...6  o.26  o..6

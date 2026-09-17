@@ -13,11 +13,13 @@
 # needs variant != ground, so the plate cannot be cream-grounded. Black discs
 # carry the pushes and the field; cream marks PUSH_ACC and every OUT_CHAR. The
 # program picks itself out in the second colour without being asked to.
+#
+# Ends with a newline: push 1, push_acc 2 makes 10, then OUT_CHAR.
 %plate 20x16
 
 o.12  o112  o1.2  +1.2  o.12  o142  o152  +1.2  o.12  o152  o142  +1.2  o.12  o152  o142  +1.2  o.12  o152  o172  v..2
 v..2  o122  o162  o.12  +1.2  o172  o152  o.12  +1.2  o172  o122  o.12  +1.2  o1.2  o.42  +1.2  o142  o.52  +1.2  <..2
->..2  +1.2  o.12  o152  o142  +1.2  o.12  o142  o142  +1.2  o.42  o112  +1.2  ...2  o.22  o.12  o.12  o.12  o..2  o..2
+>..2  +1.2  o.12  o152  o142  +1.2  o.12  o142  o142  +1.2  o.42  o112  +1.2  o.12  o122  +1.2  ...2  o.12  o..2  o..2
 o..2  o.12  o.12  o.12  o.22  o.22  o.32  o.32  o.32  o.32  o.32  o.32  o.32  o.32  o.22  o.22  o.12  o.12  o.12  o..2
 o..2  o.12  o.12  o.22  o.22  o.32  o.32  o.42  o.42  o.42  o.42  o.42  o.42  o.32  o.32  o.22  o.22  o.12  o.12  o..2
 o.12  o.12  o.22  o.22  o.32  o.32  o.42  o.42  o.42  o.42  o.42  o.42  o.42  o.42  o.32  o.32  o.22  o.22  o.12  o.12

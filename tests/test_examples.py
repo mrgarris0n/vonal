@@ -40,7 +40,7 @@ def round_trips(name):
 
 
 def test_countdown_counts_down_from_five():
-    assert output_of("countdown.vsr") == "54321"
+    assert output_of("countdown.vsr") == "54321\n"
 
 
 def test_countdown_survives_a_full_image_round_trip():
@@ -48,11 +48,11 @@ def test_countdown_survives_a_full_image_round_trip():
 
 
 def test_fibonacci_prints_the_first_ten_terms():
-    assert output_of("fibonacci.vsr") == "1 1 2 3 5 8 13 21 34 55 "
+    assert output_of("fibonacci.vsr") == "1 1 2 3 5 8 13 21 34 55 \n"
 
 
 def test_collatz_prints_the_trajectory_of_six():
-    assert output_of("collatz.vsr") == "6 3 10 5 16 8 4 2 1 "
+    assert output_of("collatz.vsr") == "6 3 10 5 16 8 4 2 1 \n"
 
 
 def test_fibonacci_survives_a_full_image_round_trip():
@@ -64,7 +64,7 @@ def test_collatz_survives_a_full_image_round_trip():
 
 
 def test_vega_prints_five():
-    assert output_of("vega.vsr") == "5"
+    assert output_of("vega.vsr") == "5\n"
 
 
 def test_vega_survives_a_full_image_round_trip():
@@ -72,7 +72,7 @@ def test_vega_survives_a_full_image_round_trip():
 
 
 def test_hello_prints_hello_world():
-    assert output_of("hello.vsr") == "Hello, World!"
+    assert output_of("hello.vsr") == "Hello, World!\n"
 
 
 def test_hello_survives_a_full_image_round_trip():
@@ -128,7 +128,7 @@ def test_collatz_in_follows_an_arbitrary_seed():
 
 
 def test_collatz_in_halts_immediately_on_one():
-    assert output_of("collatz-in.vsr", stdin="1\n") == "1 "
+    assert output_of("collatz-in.vsr", stdin="1\n") == "1 \n"
 
 
 def test_collatz_in_survives_a_full_image_round_trip():
@@ -145,7 +145,7 @@ def test_collatz_in_survives_a_full_image_round_trip():
     ],
 )
 def test_prime_decides_correctly(n, expected):
-    assert output_of("prime.vsr", stdin=f"{n}\n") == expected
+    assert output_of("prime.vsr", stdin=f"{n}\n") == expected + "\n"
 
 
 def test_prime_survives_a_full_image_round_trip():
@@ -156,7 +156,7 @@ MIRROR_PROFILE = "1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 "
 
 
 def test_mirror_prints_the_profile_of_its_own_swell():
-    assert output_of("mirror.vsr") == MIRROR_PROFILE
+    assert output_of("mirror.vsr") == MIRROR_PROFILE + "\n"
 
 
 def test_mirror_survives_a_full_image_round_trip():

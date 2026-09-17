@@ -17,9 +17,11 @@
 # Ground is cream (1) throughout and every form colour is black (0). A swell
 # wants a tight palette -- varied grounds would compete with the gradient
 # rather than support it.
+#
+# Ends with a newline: push 1, push_acc 2 makes 10, then OUT_CHAR.
 %plate 16x16
 
-o.51  +..1  ...1  o.11  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
+o.51  +..1  o.15  o125  +1.5  ...1  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
 o..1  o.11  o.11  o.21  o.21  o.21  o.31  o.31  o.31  o.31  o.21  o.21  o.21  o.11  o.11  o..1
 o.11  o.11  o.21  o.21  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.21  o.21  o.11  o.11
 o.11  o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.41  o.41  o.41  o.31  o.31  o.21  o.21  o.11
