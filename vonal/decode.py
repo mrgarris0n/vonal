@@ -33,7 +33,8 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     variant = palette.index_of(form_rgb)
 
     mask = bytes(
-        render.FORM if pixel == form_rgb else render.GROUND for pixel in block.getdata()
+        render.FORM if pixel == form_rgb else render.GROUND
+        for pixel in block.get_flattened_data()
     )
     match = render.TEMPLATES.get(mask)
     if match is None:
