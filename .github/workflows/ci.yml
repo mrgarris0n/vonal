@@ -1,0 +1,26 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      # Report every version rather than stopping at the first failure: the
+      # point of the matrix is to find out which ones actually work, since
+      # pyproject claims >=3.11 and only 3.12 has ever been run.
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]"
+      # -W error matches how the suite is run locally: a warning is a failure.
+      - run: pytest -q -W error

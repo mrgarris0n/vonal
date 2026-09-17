@@ -1,5 +1,7 @@
 # Vonal
 
+[![tests](https://github.com/mrgarris0n/vonal/actions/workflows/ci.yml/badge.svg)](https://github.com/mrgarris0n/vonal/actions/workflows/ci.yml)
+
 An esoteric programming language whose source form is an image.
 
 A program is a grid of coloured geometric cells in the visual idiom of Victor
@@ -137,3 +139,7 @@ read its own data but never its own code. A quine is impossible.
 `docs/spec.md` has the full specification: the
 encoding, the instruction table, error handling, and why the alternatives were
 rejected.
+
+## Licence
+
+MIT. See `LICENSE`.

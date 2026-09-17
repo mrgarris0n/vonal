@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Actions only. The Python dependencies are unpinned ranges with no lockfile,
+  # so there is nothing for Dependabot to bump there; version drift in pinned
+  # workflow actions is the real exposure. Pillow advisories arrive through
+  # security alerts instead, which matters because decode() feeds untrusted
+  # image bytes into it.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
