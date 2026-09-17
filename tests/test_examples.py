@@ -64,6 +64,14 @@ def test_vega_survives_a_full_image_round_trip():
     assert round_trips("vega.vsr")
 
 
+def test_hello_prints_hello_world():
+    assert output_of("hello.vsr") == "Hello, World!"
+
+
+def test_hello_survives_a_full_image_round_trip():
+    assert round_trips("hello.vsr")
+
+
 def test_vega_is_a_swell_and_not_a_flat_field():
     # This plate exists to demonstrate that scale is a free compositional
     # channel, so the gradient *is* the deliverable. A regeneration that
