@@ -90,7 +90,13 @@ cell it is free too.
 
 `examples/vega.vsr` uses this: three cells push 5 and print it, and the other
 253 are push instructions that never execute, their sizes a radial gradient that
-reads as a bulging sphere.
+reads as a bulging sphere. The other plates do the same with whatever cells the
+eye never reaches. Void padding cannot carry a composition, since a void draws
+nothing and must have scale 0, so the padding is unreached push discs instead.
+
+`examples/kinetic.vsr` goes the other way and writes the field as it runs, so
+`vonal trace` on it produces frames that differ. Every other plate traces to the
+same image repeated.
 
 ## Examples
 
@@ -101,6 +107,7 @@ reads as a bulging sphere.
 | `collatz` | trajectory of 6 |
 | `vega` | `5`, inside a swell |
 | `hello` | `Hello, World!` |
+| `kinetic` | nothing; it draws a staircase into its own field |
 
 ```bash
 .venv/bin/pytest

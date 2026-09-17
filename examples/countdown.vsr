@@ -8,8 +8,15 @@
 # east edge wraps straight back to its own start. The guard at x=0 is the exit:
 # once the decremented counter reaches zero it turns south into row 2, which is
 # void, and the machine halts.
+#
+# Composition: every cell the eye never visits is a PUSH disc that never
+# executes, its scale a horizontal swell. Void
+# padding cannot carry a swell (a void draws nothing and must have scale 0),
+# so the padding was replaced. Ground is 6 throughout. No form, no
+# variant and no reachable scale changed.
+#
 %plate 7x3
 
-o.53  v.56  ...2  ...5  ...1  ...4  ...7
-v226  >.43  %.65  +.71  o.14  #167  %.42
-...4  ....  ...3  ...6  ...1  ...5  ...7
+o.56  v.56  o.56  o.76  o.56  o.26  o..6
+v226  >.46  %.66  +.76  o.16  #166  %.46
+...6  o.26  o.56  o.76  o.56  o.26  o..6

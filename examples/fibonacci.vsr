@@ -22,8 +22,15 @@
 # turn. The two cells reached only by wrapping (never by the initial drop) are
 # exactly the tail of the update math, which has nothing useful to do until a
 # pass has already produced a fresh pair.
+#
+# Composition: every cell the eye never visits is a PUSH disc that never
+# executes, its scale a horizontal swell. Void
+# padding cannot carry a swell (a void draws nothing and must have scale 0),
+# so the padding was replaced. Ground is 7 throughout. No form, no
+# variant and no reachable scale changed.
+#
 %plate 14x3
 
-o.17  o.17  v..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
+o.17  o.17  v..7  o.37  o.47  o.57  o.67  o.67  o.57  o.47  o.37  o.27  o.17  o..7
 %3.7  #..7  >..7  %3.7  +..7  o.47  o1.7  +1.7  %3.7  o.67  o177  D2.7  v1.7  %2.7
-...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
+o..7  o.17  o.27  o.37  o.47  o.57  o.67  o.67  o.57  o.47  o.37  o.27  ...7  o..7

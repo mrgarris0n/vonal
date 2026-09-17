@@ -29,8 +29,15 @@
 # cells are, since the drop from row 1 arrives heading south), then
 # push 3, mul, push 1, add computing 3n + 1, then a turn-north at column 2
 # that returns to row 1's column 2 -- the third of its entry triangles.
+#
+# Composition: every cell the eye never visits is a PUSH disc that never
+# executes, its scale a horizontal swell. Void
+# padding cannot carry a swell (a void draws nothing and must have scale 0),
+# so the padding was replaced. Ground is 5 throughout. No form, no
+# variant and no reachable scale changed.
+#
 %plate 18x3
 
-o.67  v..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7
->..7  >..7  >..7  %..7  +..7  o.47  o1.7  +1.7  %..7  o.17  D2.7  v1.7  %..7  o.27  #4.7  v1.7  o.27  #3.7
-o.17  #..7  ^..7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  ...7  >..7  o.37  #2.7
+o.65  v..5  o.25  o.25  o.35  o.45  o.55  o.65  o.75  o.75  o.65  o.55  o.45  o.35  o.25  o.25  o.15  o..5
+>..5  >..5  >..5  %..5  +..5  o.45  o1.5  +1.5  %..5  o.15  D2.5  v1.5  %..5  o.25  #4.5  v1.5  o.25  #3.5
+o.15  #..5  ^..5  o.25  o.35  o.45  o.55  o.65  o.75  o.75  o.65  ...5  o.45  o.35  o.25  >..5  o.35  #2.5

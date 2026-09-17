@@ -15,13 +15,20 @@
 # into a void cell would be stored and readable but invisible.
 #
 # Nothing is printed. The output is the plate.
+#
+# Composition: every cell the eye never visits is a PUSH disc that never
+# executes, its scale a radial swell. Void
+# padding cannot carry a swell (a void draws nothing and must have scale 0),
+# so the padding was replaced. Ground is 7 throughout. No form, no
+# variant and no reachable scale changed.
+#
 %plate 12x8
 
-o..7  v..7  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+o..7  v..7  o.27  o.27  o.37  o.37  o.37  o.37  o.27  o.27  o.17  o..7
 v1.7  >..7  %..7  %..7  o.57  @1.7  o.17  #..7  %..7  o.17  o1.7  D2.7
-...7  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
-o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
-o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
-o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7
-o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
-o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+...7  o.27  o.37  o.47  o.57  o.57  o.57  o.57  o.47  o.37  o.27  o.17
+o.17  o.27  o.37  o.47  o.57  o.67  o.67  o.57  o.47  o.37  o.27  o.17
+o.17  o.27  o.37  o.47  o.57  o.67  o.67  o.57  o.47  o.37  o.27  o.17
+o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o.47  o.37  o.27  o.17
+o.17  o.17  o.27  o.37  o.47  o.47  o.47  o.47  o.37  o.27  o.17  o.17
+o..7  o.17  o.27  o.27  o.37  o.37  o.37  o.37  o.27  o.27  o.17  o..7
