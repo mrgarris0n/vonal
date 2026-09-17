@@ -156,17 +156,30 @@ whitespace; rows by newlines.
 ```
 %plate 5x2
 
-o.57  +0.7  ....  ....  ....
+o.57  +..7  ....  ....  ....
 ....  ....  ....  ....  ....
 ```
 
 That is: push 5, print it, halt. `o.57` is a disc, variant 0, scale 5, ground 7;
-`+0.7` is a cross, variant 0 (out num), ground 7.
+`+..7` is a cross, variant 0 (out num), scale 0, ground 7.
 
 Both grounds are 7 rather than the default 0, and they have to be. A non-void
 cell's variant **is** its form colour, so `variant == ground` is invalid (§7) —
 the glyph would be invisible. Ground 7 is a convenient default for hand-written
 plates because no variant reaches 7, so it never collides.
+
+**Canonical form: a dot means the channel is zero.** The parser accepts `0` and
+`.` interchangeably in the variant, scale and ground positions, but `emit`
+produces exactly one spelling — a dot for every zero channel, and for a void
+cell's undrawn form, variant and scale. So `disassemble` returns source in the
+same idiom a person writes, and `compile` followed by `disassemble` is
+byte-identical rather than merely semantically equivalent.
+
+The rule is uniform across all four positions deliberately. An earlier draft
+dotted variant and scale but always printed ground as a digit, which broke
+byte-identical round-tripping for any coloured shape on ground 0 — `Cell`'s own
+default — and let the void and non-void branches of the emitter drift apart.
+Spelling it as one rule rather than two is what keeps them together.
 
 `%plate WxH` is a redundancy check — a mismatch with the actual grid is a compile
 error. It is the only header. There is no `%palette` directive, because there is
