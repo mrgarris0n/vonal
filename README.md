@@ -131,6 +131,6 @@ read its own data but never its own code. A quine is impossible.
 
 ## Design
 
-`docs/superpowers/specs/2026-09-16-vonal-design.md` has the full spec: the
+`docs/spec.md` has the full specification: the
 encoding, the instruction table, error handling, and why the alternatives were
 rejected.

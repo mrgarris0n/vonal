@@ -1,7 +1,9 @@
-# Vonal — design
+# Vonal specification
 
-**Status:** approved design, pending implementation plan
-**Date:** 2026-09-16
+**Status:** implemented. Where this document turned out to be wrong it was
+amended during execution, and each such place is called out inline rather than
+quietly corrected. `docs/implementation-plan.md` is the record of that work.
+**Date:** 2026-09-16, amended through 2026-09-17
 
 ## 1. Thesis
 

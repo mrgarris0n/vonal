@@ -1,5 +1,10 @@
 # Vonal Implementation Plan
 
+> **Kept as a record, not as instructions.** The work described here is done;
+> `docs/spec.md` is the current reference. This file is retained because the
+> "Corrected during execution" callouts mark the places where the plan itself
+> turned out to be wrong, which is the part worth reading.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A Turing-complete esoteric language whose source form is a Vasarely-style plate image, with a Python reference interpreter, a text notation that compiles to the image, and a disassembler back.
@@ -8,7 +13,7 @@
 
 **Tech Stack:** Python 3.11+, Pillow (image IO), pytest, hypothesis (round-trip properties). Nothing else.
 
-**Spec:** `docs/superpowers/specs/2026-09-16-vonal-design.md`
+**Spec:** `docs/spec.md`
 
 ## Global Constraints
 
