@@ -1,0 +1,27 @@
+# kinetic: a program that draws into its own picture
+#
+# Rows 0-1 are a loop counting i from 0 to 7. Each pass writes i into the
+# field at (i, 5) with PUT, then increments and tests against 8; the
+# guard at (0,1) turns south into the void at (0,2) when it reaches it.
+#
+# Row 5 starts as twelve scale-0 discs, nearly invisible. As the loop
+# runs, cells 0 through 7 are rewritten to scales 0 through 7, so a staircase
+# grows left to right across the row while the program executes. Run
+#
+#     vonal trace examples/kinetic.vsr frames/
+#
+# and the frames differ: this is the only plate here whose picture changes as
+# it computes. A write is visible because these cells draw a glyph; a write
+# into a void cell would be stored and readable but invisible.
+#
+# Nothing is printed. The output is the plate.
+%plate 12x8
+
+o..7  v..7  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+v1.7  >..7  %..7  %..7  o.57  @1.7  o.17  #..7  %..7  o.17  o1.7  D2.7
+...7  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7  o..7
+o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17
+o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17  o.17

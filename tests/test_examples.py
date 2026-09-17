@@ -1,9 +1,10 @@
+import hashlib
 import io
 from pathlib import Path
 
 from PIL import Image
 
-from vonal import decode, notation, render
+from vonal import cli, decode, notation, render
 from vonal.machine import Machine
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
@@ -70,6 +71,38 @@ def test_hello_prints_hello_world():
 
 def test_hello_survives_a_full_image_round_trip():
     assert round_trips("hello.vsr")
+
+
+def test_kinetic_prints_nothing_and_halts():
+    # output_of asserts the machine halted, which is the whole assertion here:
+    # this plate's output is the plate, not stdout.
+    assert output_of("kinetic.vsr") == ""
+
+
+def test_kinetic_survives_a_full_image_round_trip():
+    assert round_trips("kinetic.vsr")
+
+
+def test_kinetic_draws_a_staircase_into_its_own_field():
+    plate = notation.parse((EXAMPLES / "kinetic.vsr").read_text())
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=2000)
+    assert machine.halted
+    assert machine.field[5][:8] == [0, 1, 2, 3, 4, 5, 6, 7]
+    # The field is a copy; the plate itself must be untouched.
+    assert [plate.at(x, 5).scale for x in range(8)] == [0] * 8
+
+
+def test_kinetic_trace_frames_actually_differ(tmp_path):
+    # The point of this plate, and the only test in the suite that pins it: a
+    # running program deforms its own picture. Every other example traces to
+    # byte-identical frames because none of them writes the field, so a
+    # regression in the trace rebuild would be invisible without this.
+    assert cli.main(["trace", str(EXAMPLES / "kinetic.vsr"), str(tmp_path)]) == 0
+    frames = sorted(tmp_path.glob("*.png"))
+    digests = {hashlib.sha256(f.read_bytes()).hexdigest() for f in frames}
+    assert len(frames) > 1
+    assert len(digests) == 8, f"expected 8 distinct frames, got {len(digests)}"
 
 
 def test_vega_is_a_swell_and_not_a_flat_field():
