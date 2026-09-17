@@ -1,3 +1,4 @@
+from vonal import notation
 from vonal.cli import main
 
 HELLO = "%plate 3x1\n\no.57  +..7  ....\n"
@@ -30,6 +31,22 @@ def test_disassemble_round_trips_the_source(tmp_path):
     main(["compile", str(src), str(png)])
     assert main(["disassemble", str(png), str(back)]) == 0
     assert back.read_text() == HELLO
+
+
+def test_disassemble_without_an_output_path_writes_to_stdout(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    png = tmp_path / "hello.png"
+    main(["compile", str(src), str(png)])
+
+    assert main(["disassemble", str(png)]) == 0
+
+    # Not merely "something was printed": stdout must carry the same canonical
+    # source the file form writes, so the two output paths cannot drift, and
+    # what lands on stdout must still be a parseable plate.
+    printed = capsys.readouterr().out
+    assert printed == HELLO
+    assert notation.parse(printed) == notation.parse(HELLO)
 
 
 def test_trace_writes_one_frame_per_step(tmp_path):
