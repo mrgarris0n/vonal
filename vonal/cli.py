@@ -6,9 +6,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
-from vonal import decode, notation, render
+from vonal import decode, isa, notation, render
 from vonal.cell import Cell, Plate
 from vonal.errors import VonalError
 from vonal.machine import Machine
@@ -17,7 +17,9 @@ from vonal.machine import Machine
 def _load(path: Path) -> Plate:
     """A .vsr is compiled in memory; anything else is decoded as an image."""
     if path.suffix == ".vsr":
-        return notation.parse(path.read_text())
+        plate = notation.parse(path.read_text())
+        isa.validate(plate)
+        return plate
     return decode.decode(Image.open(path))
 
 
@@ -35,7 +37,9 @@ def _with_field(plate: Plate, field: list[list[int]]) -> Plate:
 
 
 def _cmd_compile(args: argparse.Namespace) -> int:
-    render.render(notation.parse(Path(args.source).read_text())).save(args.out)
+    plate = notation.parse(Path(args.source).read_text())
+    isa.validate(plate)
+    render.render(plate).save(args.out)
     return 0
 
 
@@ -96,5 +100,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.func(args)
     except VonalError as exc:
+        print(f"vonal: {exc}", file=sys.stderr)
+        return 1
+    except (OSError, UnidentifiedImageError) as exc:
+        # A missing/unreadable file, or an image Pillow cannot identify --
+        # not a Vonal-level fault, but still not a traceback the user should
+        # see. Anything else genuinely unexpected keeps propagating.
         print(f"vonal: {exc}", file=sys.stderr)
         return 1

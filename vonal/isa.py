@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import enum
 
-from vonal.cell import Form
+from vonal.cell import Form, Plate
+from vonal.errors import LoadError
 
 
 class Op(enum.Enum):
@@ -74,3 +75,24 @@ def lookup(form: Form, variant: int) -> Op | None:
     if form is Form.VOID:
         return Op.HALT  # a void cell's variant is not representable, so it is ignored
     return _TABLE.get((form, variant))
+
+
+def validate(plate: Plate) -> None:
+    """Reject a plate that contains any undefined (form, variant) pair.
+
+    decode() performs this check as part of loading a PNG, so a plate that
+    started life as .vsr source and never goes through decode() -- because it
+    compiles straight to PNG, or is fed to `run`/`trace` as text -- would
+    otherwise be accepted even though the same program loaded from its own
+    rendered image would be rejected. Text and image are two representations
+    of one Plate (see cell.py), so they must accept the same program set;
+    this walks every cell exactly as decode() implicitly does, up front,
+    rather than only surfacing the fault if and when the eye happens to step
+    on the offending cell.
+    """
+    for y, row in enumerate(plate.cells):
+        for x, cell in enumerate(row):
+            if not cell.is_void and lookup(cell.form, cell.variant) is None:
+                raise LoadError(
+                    x, y, f"undefined instruction: {cell.form.name} variant {cell.variant}"
+                )

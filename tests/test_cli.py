@@ -48,10 +48,62 @@ def test_a_compile_error_exits_nonzero_with_a_message(tmp_path, capsys):
     assert "line 3" in capsys.readouterr().err
 
 
+UNREACHABLE = "%plate 3x2\n\no.57  +..7  ....\no2.7  ....  ....\n"
+
+
+def test_compile_rejects_an_undefined_opcode_off_the_eyes_path(tmp_path, capsys):
+    # DISC variant 2 is undefined. The eye's own path (push 5, print, halt)
+    # never reaches (0,1), so the program "looks fine" if only the run were
+    # checked -- but the PNG is the canonical program (spec section 6), and a
+    # plate that cannot load as an image is not a valid program at all.
+    src = tmp_path / "unreachable.vsr"
+    src.write_text(UNREACHABLE)
+    png = tmp_path / "unreachable.png"
+
+    assert main(["compile", str(src), str(png)]) == 1
+    err = capsys.readouterr().err
+    assert "vonal:" in err
+    assert "(0,1)" in err
+    assert "DISC variant 2" in err
+    assert not png.exists()
+
+
+def test_run_on_text_rejects_the_same_undefined_opcode_the_image_would(tmp_path, capsys):
+    # Text and image are two representations of one Plate; they must accept
+    # the same program set, so `run` on the .vsr source must reject this
+    # exactly as loading the compiled PNG would, not merely once the eye
+    # happens to step onto the bad cell.
+    src = tmp_path / "unreachable.vsr"
+    src.write_text(UNREACHABLE)
+    assert main(["run", str(src)]) == 1
+    assert "vonal:" in capsys.readouterr().err
+
+
+def test_compile_still_succeeds_for_a_fully_defined_plate(tmp_path):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    png = tmp_path / "hello.png"
+    assert main(["compile", str(src), str(png)]) == 0
+    assert png.exists()
+
+
 def test_max_steps_stops_a_nonterminating_plate(tmp_path):
     src = tmp_path / "loop.vsr"
     src.write_text("%plate 2x1\n\no.17  o.17\n")
     assert main(["run", str(src), "--max-steps", "10"]) == 0
+
+
+def test_a_missing_file_exits_nonzero_with_a_message_not_a_traceback(tmp_path, capsys):
+    missing = tmp_path / "missing.vsr"
+    assert main(["run", str(missing)]) == 1
+    assert "vonal:" in capsys.readouterr().err
+
+
+def test_disassemble_of_a_non_image_exits_nonzero_with_a_message(tmp_path, capsys):
+    bogus = tmp_path / "notanimage.png"
+    bogus.write_bytes(b"not a png")
+    assert main(["disassemble", str(bogus)]) == 1
+    assert "vonal:" in capsys.readouterr().err
 
 
 def test_trace_skips_void_cells_when_field_is_modified(tmp_path):
