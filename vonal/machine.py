@@ -62,8 +62,46 @@ class Machine:
             self.stack.append(self._pop(x, y) * 8 + self.field[y][x])
         elif op in _ARITH:
             self._arith(op, x, y)
+        elif op in _STACK:
+            self._stack_op(op, x, y)
+        elif op in _COMPARE:
+            self._compare(op, x, y)
+        elif op in _TURNS:
+            self._turn(op, cell, x, y)
         else:
             raise NotImplementedError(f"{op} is not implemented yet")
+
+    def _stack_op(self, op: Op, x: int, y: int) -> None:
+        if op is Op.DUP:
+            value = self._pop(x, y)
+            self.stack.extend((value, value))
+        elif op is Op.POP:
+            self._pop(x, y)
+        elif op is Op.SWAP:
+            a, b = self._pop2(x, y)
+            self.stack.extend((b, a))
+        elif op is Op.OVER:
+            a, b = self._pop2(x, y)
+            self.stack.extend((a, b, a))
+        elif op is Op.ROLL:
+            count = self._pop(x, y)
+            if count < 0 or count > len(self.stack):
+                raise VonalRuntimeError(x, y, f"roll of {count} exceeds the stack depth")
+            if count > 1:
+                group = self.stack[-count:]
+                del self.stack[-count:]
+                self.stack.extend([group[-1], *group[:-1]])
+
+    def _compare(self, op: Op, x: int, y: int) -> None:
+        a, b = self._pop2(x, y)
+        self.stack.append(1 if {Op.GT: a > b, Op.LT: a < b, Op.EQ: a == b}[op] else 0)
+
+    def _turn(self, op: Op, cell: Cell, x: int, y: int) -> None:
+        if op is Op.TURN_IF and self._pop(x, y) == 0:
+            return
+        if op is Op.TURN_UNLESS and self._pop(x, y) != 0:
+            return
+        self.heading = cell.form.heading
 
     def _arith(self, op: Op, x: int, y: int) -> None:
         if op is Op.NEG:
@@ -94,3 +132,6 @@ class Machine:
 
 
 _ARITH = {Op.ADD, Op.SUB, Op.MUL, Op.DIV, Op.MOD, Op.NEG}
+_STACK = {Op.DUP, Op.POP, Op.SWAP, Op.OVER, Op.ROLL}
+_COMPARE = {Op.GT, Op.LT, Op.EQ}
+_TURNS = {Op.TURN, Op.TURN_IF, Op.TURN_UNLESS}
