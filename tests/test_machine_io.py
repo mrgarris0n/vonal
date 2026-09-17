@@ -40,10 +40,32 @@ def test_field_coordinates_wrap():
     assert machine.field[0][2] == 7
 
 
-def test_put_of_an_out_of_range_value_is_an_error():
-    # v = 1*8 + 1 = 9, which is outside 0-7
+def test_put_into_a_void_cells_coordinates_is_valid_and_readable_back():
+    # Controller ruling: `Cell`'s "void => scale 0" rule constrains the
+    # rendered *plate*; `Machine.field` is a bare list[list[int]] with no
+    # such constraint, and forbidding writes to a void cell's coordinates
+    # would make most of a real plate unaddressable as a data surface. This
+    # pins the ruled behaviour: (0,1) is void, yet a `put` targeting it
+    # succeeds and a later `get` of the same coordinates returns the value.
+    machine, _ = run(
+        "%plate 8x2\n\n"
+        "o.57  o.07  o.17  @1.7  o.07  o.17  @0.7  ....\n"
+        "....  ....  ....  ....  ....  ....  ....  ....\n"
+    )
+    assert machine.plate.at(0, 1).is_void
+    assert machine.field[1][0] == 5
+    assert machine.stack == [5]
+
+
+@pytest.mark.parametrize("source", [
+    # v = 1*8 + 1 = 9, which is outside 0-7 on the high side.
+    "%plate 6x1\n\no.17  o117  o.07  o.07  @1.7  ....\n",
+    # push 1, negate -> -1, which is outside 0-7 on the low side.
+    "%plate 6x1\n\no.17  #5.7  o.07  o.07  @1.7  ....\n",
+])
+def test_put_of_an_out_of_range_value_is_an_error(source):
     with pytest.raises(VonalRuntimeError, match="0-7"):
-        run("%plate 6x1\n\no.17  o117  o.07  o.07  @1.7  ....\n")
+        run(source)
 
 
 def test_out_num_writes_decimal():

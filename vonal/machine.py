@@ -30,6 +30,10 @@ class Machine:
         return self.stack.pop()
 
     def _pop2(self, x: int, y: int) -> tuple[int, int]:
+        # Top of stack is the *right* operand: for `a b SUB`, this returns
+        # (a, b) so callers compute a - b, not b - a. The classic stack-
+        # machine footgun -- get the pop order backwards and every
+        # non-commutative op (SUB, DIV, MOD, GT, LT) silently flips.
         b = self._pop(x, y)
         a = self._pop(x, y)
         return a, b
@@ -87,7 +91,9 @@ class Machine:
             self.stack.extend((a, b, a))
         elif op is Op.ROLL:
             count = self._pop(x, y)
-            if count < 0 or count > len(self.stack):
+            if count < 0:
+                raise VonalRuntimeError(x, y, f"roll of {count} is negative")
+            if count > len(self.stack):
                 raise VonalRuntimeError(x, y, f"roll of {count} exceeds the stack depth")
             if count > 1:
                 group = self.stack[-count:]

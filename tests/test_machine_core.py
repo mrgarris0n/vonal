@@ -60,6 +60,21 @@ def test_the_eye_wraps_east():
     assert machine.steps == 5
 
 
+def test_the_eye_wraps_south():
+    # No example or other test exercises y modulo height -- every existing
+    # wrap check is horizontal -- so the torus claim (spec section 3) is
+    # half-unproven. A single-column, two-row plate where each cell turns
+    # south unconditionally: after one step the eye is at row 1, and after a
+    # second it must reappear at row 0, having walked off the bottom edge.
+    machine = Machine(parse("%plate 1x2\n\nv0.7\nv0.7\n"), stdout=io.StringIO())
+    assert (machine.x, machine.y) == (0, 0)
+    machine.step()
+    assert (machine.x, machine.y) == (0, 1)
+    machine.step()
+    assert (machine.x, machine.y) == (0, 0)  # wrapped south past the last row
+    assert machine.heading is Heading.S
+
+
 def test_stack_underflow_names_the_cell():
     with pytest.raises(VonalRuntimeError) as excinfo:
         run("%plate 2x1\n\n#0.7  ....\n")

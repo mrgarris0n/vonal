@@ -30,8 +30,15 @@ def test_roll_moves_the_top_to_the_bottom_of_the_group():
 
 @pytest.mark.parametrize("n", [4, 7])
 def test_roll_deeper_than_the_stack_is_an_error(n):
-    with pytest.raises(VonalRuntimeError, match="roll"):
+    with pytest.raises(VonalRuntimeError, match="exceeds the stack depth"):
         run(f"%plate 5x1\n\no.17  o.27  o.{n}7  %4.7  ....\n")
+
+
+def test_negative_roll_is_an_error_with_a_message_that_names_the_fault():
+    # A negative count does not "exceed the stack depth" -- that phrasing
+    # (the message before this fix) misdescribes a different fault.
+    with pytest.raises(VonalRuntimeError, match="negative"):
+        run("%plate 6x1\n\no.17  o.27  o.17  #5.7  %4.7  ....\n")
 
 
 @pytest.mark.parametrize("variant,expected", [
