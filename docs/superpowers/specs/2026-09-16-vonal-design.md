@@ -56,6 +56,20 @@ Freeing the ground colour is deliberate. It gives the artist an entire channel t
 key the plate with, so any colour scheme can host any program, and logic can be
 written before the plate is composed.
 
+**And there is a second free channel, which the table above understates.** A
+cell's `scale` is read by exactly two things: the `PUSH` family, which reads the
+cell it is standing on, and a `get` aimed at that cell's coordinates. On every
+other cell — every triangle, rhombus, square, cross, ring, half-disc, and every
+void — the scale is as free as the ground. A plate that uses no `get` (which all
+three shipped examples do not) has *one* semantically meaningful scale per disc
+and nothing else, so the entire remaining scale field is available for
+composition at zero cost to behaviour.
+
+This is what makes §2's Op-art goal reachable rather than aspirational: a smooth
+gradient of sizes across a body row, which is the *Vega* effect the language is
+named for, can be laid over working code without touching a single opcode,
+variant or literal.
+
 **The eye.** Position plus heading (N/E/S/W). It is the only locus of control.
 Execution begins at `(0,0)` heading east, by convention — no metadata is stored
 in the image. A triangle at `(0,0)` redirects it if another entry is wanted, so
@@ -69,8 +83,18 @@ North is `-y`.
 - **The stack** — unbounded integers. The actual compute surface, and the source
   of Turing-completeness. Invisible.
 - **The field** — the grid's own `scale` channel, `W×H` cells of `0–7`, readable
-  and writable at runtime. Bounded, and visible: a write re-renders that cell at
-  a new size.
+  and writable at runtime. Bounded, and visible on any cell that draws a glyph:
+  a write re-renders that cell at a new size.
+
+  **A write to a void cell is valid and invisible.** Void cells are most of a
+  real plate, so restricting the field to drawn cells would make it largely
+  unaddressable and destroy its value as a data surface — the field is the whole
+  grid. But a void cell draws nothing, so there is no glyph to resize: the value
+  is stored, `get` reads it back, and the picture does not change. Two
+  consequences follow and are accepted. A rendered frame is not a complete record
+  of machine state, so a `trace` animation is a visualisation rather than a
+  checkpoint one could resume from. And the visible-deformation claim above is a
+  property of drawn cells, not a universal invariant.
 
 The split is load-bearing. Computing on the bounded field alone would cap the
 language at a linear-bounded automaton; computing on the stack alone would leave
@@ -266,12 +290,24 @@ emit a frame per step and dump a run as an animation.
 Three phases, each failing completely before the next begins.
 
 **Compile** (`.vsr` → PNG): malformed tokens, ragged rows, out-of-range digits,
-`%plate` mismatch. Reported with line and column.
+`%plate` mismatch, **a non-void cell whose form colour equals its ground
+colour**, and **an undefined `(form, variant)` pair anywhere on the plate**.
+Reported with line and column where the token position is known, and by grid
+cell otherwise.
+
+The last two belong here rather than at load, for opposite reasons. Equal
+colours *cannot* be detected at load — such a cell renders as, and decodes as,
+void, which is precisely why it is forbidden — so the rule is enforceable only
+against the text. An undefined opcode, by contrast, is detectable at load and is
+also rejected there; compile must reject it too, including on cells the eye
+never visits. Otherwise `compile` would write a canonical artefact that `decode`
+refuses, exit successfully, and leave the text and the image accepting different
+sets of programs. They accept the same set, and keeping them aligned is
+compile's job.
 
 **Load** (PNG → program): image dimensions not a multiple of 64; a cell with more
-than two distinct colours; a colour outside `vasarely-8`; **a non-void cell whose
-form colour equals its ground colour** (it would render as, and decode as, void);
-no matching `(form, scale)` template; an undefined `(form, variant)` pair.
+than two distinct colours; a colour outside `vasarely-8`; no matching
+`(form, scale)` template; an undefined `(form, variant)` pair.
 
 Validating variants at load makes opcode validity a whole-program static check: a
 plate that loads cannot contain an invalid instruction.
