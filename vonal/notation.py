@@ -75,15 +75,17 @@ def parse(text: str) -> Plate:
     return Plate(width, height, tuple(rows))
 
 
+def _channel(value: int) -> str:
+    """Represent a channel value: dot for zero, digit otherwise."""
+    return "." if value == 0 else str(value)
+
+
 def _token(cell: Cell) -> str:
-    # Variant and scale are written as dots when zero for readability, matching
-    # the parsing convention that accepts both '.' and '0' to mean zero.
+    # A dot means the channel is zero, uniformly in all four positions.
+    # This matches the parsing convention that accepts both '.' and '0' to mean zero.
     if cell.is_void:
-        ground = "." if cell.ground == 0 else str(cell.ground)
-        return f"...{ground}"
-    variant = "." if cell.variant == 0 else str(cell.variant)
-    scale = "." if cell.scale == 0 else str(cell.scale)
-    return f"{cell.form.value}{variant}{scale}{cell.ground}"
+        return f"...{_channel(cell.ground)}"
+    return f"{cell.form.value}{_channel(cell.variant)}{_channel(cell.scale)}{_channel(cell.ground)}"
 
 
 def emit(plate: Plate) -> str:

@@ -52,3 +52,15 @@ def test_max_steps_stops_a_nonterminating_plate(tmp_path):
     src = tmp_path / "loop.vsr"
     src.write_text("%plate 2x1\n\no.17  o.17\n")
     assert main(["run", str(src), "--max-steps", "10"]) == 0
+
+
+def test_trace_skips_void_cells_when_field_is_modified(tmp_path):
+    # This plate pushes 3, 0, 1 then PUTs to field[1][0] = 3.
+    # Cell (0,1) is void, so _with_field must skip it (not construct a void with scale 3).
+    src = tmp_path / "put.vsr"
+    src.write_text("%plate 5x2\n\no.37  o.07  o.17  @1.7  ....\n....  ....  ....  ....  ....\n")
+    out = tmp_path / "frames"
+    # Should succeed: trace walks through the execution without error.
+    assert main(["trace", str(src), str(out)]) == 0
+    # 5 frames: initial, then one after each step (push 3, push 0, push 1, PUT, halt).
+    assert len(sorted(out.glob("*.png"))) == 5
