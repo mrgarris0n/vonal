@@ -37,9 +37,20 @@ def _with_field(plate: Plate, field: list[list[int]]) -> Plate:
 
 
 def _cmd_compile(args: argparse.Namespace) -> int:
+    out = Path(args.out)
+    if out.suffix.lower() != ".png":
+        # Decoding matches palette colours exactly, so the canonical form has
+        # to be lossless. Pillow infers the format from the suffix, and a .jpg
+        # would be written happily and then fail to load -- exit 0 now, an
+        # unloadable artefact later.
+        raise VonalError(
+            f"compile writes PNG, but {out.name!r} asks for "
+            f"{out.suffix.lower() or 'no extension'}; the canonical form must "
+            "be lossless because decoding matches palette colours exactly"
+        )
     plate = notation.parse(Path(args.source).read_text())
     isa.validate(plate)
-    render.render(plate).save(args.out)
+    render.render(plate).save(out)
     return 0
 
 

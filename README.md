@@ -26,7 +26,7 @@ python -m venv .venv
 ## Commands
 
 ```bash
-vonal compile     src.vsr out.png     # text source to canonical image
+vonal compile     src.vsr out.png     # text source to canonical image (.png only)
 vonal disassemble in.png [out.vsr]    # image back to text
 vonal run         plate [--max-steps N]   # accepts .vsr or .png
 vonal trace       plate outdir/       # one PNG frame per step

@@ -1,5 +1,9 @@
-from vonal import notation
+import pytest
+from PIL import Image
+
+from vonal import decode, notation, render
 from vonal.cli import main
+from vonal.errors import LoadError
 
 HELLO = "%plate 3x1\n\no.57  +..7  ....\n"
 
@@ -31,6 +35,28 @@ def test_disassemble_round_trips_the_source(tmp_path):
     main(["compile", str(src), str(png)])
     assert main(["disassemble", str(png), str(back)]) == 0
     assert back.read_text() == HELLO
+
+
+def test_compile_refuses_a_lossy_output_format(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    bad = tmp_path / "hello.jpg"
+
+    assert main(["compile", str(src), str(bad)]) == 1
+    assert "lossless" in capsys.readouterr().err
+    # Refusing means refusing: no half-written artefact left behind.
+    assert not bad.exists()
+
+
+def test_a_jpeg_of_a_plate_really_is_unloadable(tmp_path):
+    # Evidence for the guard above, so it is not taken on faith. Rendering
+    # straight to JPEG bypasses the CLI, and the result cannot be decoded:
+    # JPEG is lossy and decoding matches palette colours exactly.
+    plate = notation.parse(HELLO)
+    jpg = tmp_path / "plate.jpg"
+    render.render(plate).save(jpg)
+    with pytest.raises(LoadError, match="not in the palette"):
+        decode.decode(Image.open(jpg))
 
 
 def test_disassemble_without_an_output_path_writes_to_stdout(tmp_path, capsys):
