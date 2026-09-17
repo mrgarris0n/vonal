@@ -32,9 +32,15 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     form_rgb = next(colour for colour in found if colour != ground_rgb)
     variant = palette.index_of(form_rgb)
 
+    # tobytes() predates every Pillow version this project has ever
+    # targeted (unlike get_flattened_data(), added in 12.1, or the
+    # deprecated getdata() it replaced), and byte-slice comparison against
+    # the raw RGB triples is faster than either: no per-pixel tuple
+    # construction and comparison, just a bytes slice compare.
+    raw, form_bytes = block.tobytes(), bytes(form_rgb)
     mask = bytes(
-        render.FORM if pixel == form_rgb else render.GROUND
-        for pixel in block.get_flattened_data()
+        render.FORM if raw[i : i + 3] == form_bytes else render.GROUND
+        for i in range(0, len(raw), 3)
     )
     match = render.TEMPLATES.get(mask)
     if match is None:
