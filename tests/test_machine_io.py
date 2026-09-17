@@ -1,0 +1,83 @@
+import io
+import pytest
+
+from vonal.errors import VonalRuntimeError
+from vonal.machine import Machine
+from vonal.notation import parse
+
+
+def run(source, stdin=""):
+    out = io.StringIO()
+    machine = Machine(parse(source), stdin=io.StringIO(stdin), stdout=out)
+    machine.run(max_steps=1000)
+    return machine, out.getvalue()
+
+
+def test_get_reads_the_field():
+    # push x=1, push y=1, get -> the scale of cell (1,1), which is 6
+    machine, _ = run(
+        "%plate 4x2\n\no.17  o.17  @0.7  ....\n....  o.67  ....  ....\n"
+    )
+    assert machine.stack == [6]
+
+
+def test_put_writes_the_field():
+    # push v=7, x=3, y=0, put -> field[0][3] becomes 7
+    machine, _ = run("%plate 5x1\n\no.77  o.37  o.07  @1.7  ....\n")
+    assert machine.field[0][3] == 7
+
+
+def test_put_leaves_the_plate_untouched():
+    plate = parse("%plate 5x1\n\no.77  o.37  o.07  @1.7  ....\n")
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=100)
+    assert plate.at(3, 0).scale == 0
+
+
+def test_field_coordinates_wrap():
+    # x = 1*8 + 1 = 9, and 9 % 7 == 2 on a 7-wide plate
+    machine, _ = run("%plate 7x1\n\no.77  o.17  o117  o.07  @1.7  ....  ....\n")
+    assert machine.field[0][2] == 7
+
+
+def test_put_of_an_out_of_range_value_is_an_error():
+    # v = 1*8 + 1 = 9, which is outside 0-7
+    with pytest.raises(VonalRuntimeError, match="0-7"):
+        run("%plate 6x1\n\no.17  o117  o.07  o.07  @1.7  ....\n")
+
+
+def test_out_num_writes_decimal():
+    _, out = run("%plate 3x1\n\no.57  +0.7  ....\n")
+    assert out == "5"
+
+
+def test_out_char_writes_a_character():
+    # 1 -> 1*8+0 = 8 -> 8*8+1 = 65 -> 'A'
+    _, out = run("%plate 5x1\n\no.17  o107  o117  +1.7  ....\n")
+    assert out == "A"
+
+
+def test_out_char_rejects_an_invalid_code_point():
+    with pytest.raises(VonalRuntimeError, match="code point"):
+        run("%plate 4x1\n\no.17  #5.7  +1.7  ....\n")  # -1
+
+
+def test_in_num_reads_an_integer():
+    machine, _ = run("%plate 2x1\n\n+2.7  ....\n", stdin="42\n")
+    assert machine.stack == [42]
+
+
+def test_in_char_reads_one_code_point():
+    machine, _ = run("%plate 2x1\n\n+3.7  ....\n", stdin="Az")
+    assert machine.stack == [ord("A")]
+
+
+@pytest.mark.parametrize("variant", [2, 3])
+def test_eof_pushes_minus_one(variant):
+    machine, _ = run(f"%plate 2x1\n\n+{variant}.7  ....\n", stdin="")
+    assert machine.stack == [-1]
+
+
+def test_malformed_numeric_input_is_an_error():
+    with pytest.raises(VonalRuntimeError, match="not a number"):
+        run("%plate 2x1\n\n+2.7  ....\n", stdin="banana\n")

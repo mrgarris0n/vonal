@@ -68,8 +68,10 @@ class Machine:
             self._compare(op, x, y)
         elif op in _TURNS:
             self._turn(op, cell, x, y)
+        elif op in _FIELD:
+            self._field_op(op, x, y)
         else:
-            raise NotImplementedError(f"{op} is not implemented yet")
+            self._io(op, x, y)
 
     def _stack_op(self, op: Op, x: int, y: int) -> None:
         if op is Op.DUP:
@@ -123,6 +125,40 @@ class Machine:
                 raise VonalRuntimeError(x, y, "modulo by zero")
             self.stack.append(a % b)
 
+    def _field_op(self, op: Op, x: int, y: int) -> None:
+        fy = self._pop(x, y) % self.plate.height
+        fx = self._pop(x, y) % self.plate.width
+        if op is Op.GET:
+            self.stack.append(self.field[fy][fx])
+            return
+        value = self._pop(x, y)
+        if not 0 <= value <= 7:
+            # Positions wrap; values never do.
+            raise VonalRuntimeError(x, y, f"put value must be 0-7, got {value}")
+        self.field[fy][fx] = value
+
+    def _io(self, op: Op, x: int, y: int) -> None:
+        if op is Op.OUT_NUM:
+            self.stdout.write(str(self._pop(x, y)))
+        elif op is Op.OUT_CHAR:
+            value = self._pop(x, y)
+            try:
+                self.stdout.write(chr(value))
+            except (ValueError, OverflowError) as exc:
+                raise VonalRuntimeError(x, y, f"{value} is not a valid code point") from exc
+        elif op is Op.IN_CHAR:
+            char = self.stdin.read(1)
+            self.stack.append(-1 if char == "" else ord(char))
+        elif op is Op.IN_NUM:
+            line = self.stdin.readline()
+            if line == "":
+                self.stack.append(-1)
+                return
+            try:
+                self.stack.append(int(line.strip()))
+            except ValueError as exc:
+                raise VonalRuntimeError(x, y, f"{line.strip()!r} is not a number") from exc
+
     def run(self, max_steps: int | None = None) -> None:
         """Run until halt, or until max_steps have been executed."""
         while not self.halted:
@@ -135,3 +171,4 @@ _ARITH = {Op.ADD, Op.SUB, Op.MUL, Op.DIV, Op.MOD, Op.NEG}
 _STACK = {Op.DUP, Op.POP, Op.SWAP, Op.OVER, Op.ROLL}
 _COMPARE = {Op.GT, Op.LT, Op.EQ}
 _TURNS = {Op.TURN, Op.TURN_IF, Op.TURN_UNLESS}
+_FIELD = {Op.GET, Op.PUT}
