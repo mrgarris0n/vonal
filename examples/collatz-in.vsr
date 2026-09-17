@@ -1,0 +1,24 @@
+# collatz-in: the trajectory of whatever number you give it
+#
+#     $ echo 27 | vonal run examples/collatz-in.vsr
+#
+# Identical to collatz.vsr but for one cell. Its seed at (0,0) was a disc
+# pushing the literal 6; here it is a cross reading a number from stdin, so
+# the plate computes from input rather than from a constant baked into its
+# own picture. Every other cell, including the whole loop body, is unchanged.
+#
+# The horizontal swell puts scale 0 at column 0, and a cross ignores its
+# scale anyway, so the substitution costs the composition nothing.
+#
+# Termination is the Collatz conjecture's problem, not this plate's: it halts
+# for any positive integer anyone has ever tried, and loops forever on 0, on
+# a negative number, and on end-of-input (where IN_NUM pushes -1). Use
+# --max-steps if you want a guaranteed stop.
+#
+# Row layout, the loop body and the odd branch are all documented in
+# collatz.vsr, which this is a copy of.
+%plate 18x3
+
++2.5  v..5  o.25  o.25  o.35  o.45  o.55  o.65  o.75  o.75  o.65  o.55  o.45  o.35  o.25  o.25  o.15  o..5
+>..5  >..5  >..5  %..5  +..5  o.45  o1.5  +1.5  %..5  o.15  D2.5  v1.5  %..5  o.25  #4.5  v1.5  o.25  #3.5
+o.15  #..5  ^..5  o.25  o.35  o.45  o.55  o.65  o.75  o.75  o.65  ...5  o.45  o.35  o.25  >..5  o.35  #2.5

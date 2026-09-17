@@ -11,17 +11,17 @@ from vonal.machine import Machine
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
 
-def output_of_plate(plate, max_steps=200_000, label="plate"):
+def output_of_plate(plate, max_steps=200_000, label="plate", stdin=""):
     out = io.StringIO()
-    machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
+    machine = Machine(plate, stdin=io.StringIO(stdin), stdout=out)
     machine.run(max_steps=max_steps)
     assert machine.halted, f"{label} did not halt within {max_steps} steps"
     return out.getvalue()
 
 
-def output_of(name, max_steps=200_000):
+def output_of(name, max_steps=200_000, stdin=""):
     plate = notation.parse((EXAMPLES / name).read_text())
-    return output_of_plate(plate, max_steps, name)
+    return output_of_plate(plate, max_steps, name, stdin)
 
 
 def round_trips(name):
@@ -108,6 +108,30 @@ def test_kinetic_trace_frames_actually_differ(tmp_path):
     digests = {hashlib.sha256(f.read_bytes()).hexdigest() for f in frames}
     assert len(frames) > 1
     assert len(digests) == 8, f"expected 8 distinct frames, got {len(digests)}"
+
+
+def test_collatz_in_given_six_matches_the_hardcoded_collatz():
+    # The two plates differ by exactly one cell, so feeding the literal that
+    # the other one bakes in must reproduce it byte for byte.
+    assert output_of("collatz-in.vsr", stdin="6\n") == output_of("collatz.vsr")
+
+
+def test_collatz_in_follows_an_arbitrary_seed():
+    # 27 is the standard demonstration: 112 terms, peaking at 9232 before it
+    # collapses. Matching those two numbers is what shows the plate computes
+    # from input rather than from anything written into its own picture.
+    terms = output_of("collatz-in.vsr", stdin="27\n").split()
+    assert len(terms) == 112
+    assert max(int(t) for t in terms) == 9232
+    assert terms[0] == "27" and terms[-1] == "1"
+
+
+def test_collatz_in_halts_immediately_on_one():
+    assert output_of("collatz-in.vsr", stdin="1\n") == "1 "
+
+
+def test_collatz_in_survives_a_full_image_round_trip():
+    assert round_trips("collatz-in.vsr")
 
 
 MIRROR_PROFILE = "1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 "

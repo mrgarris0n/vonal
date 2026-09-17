@@ -10,6 +10,9 @@ program can deform its own picture.
 ```
 $ vonal run examples/hello.png
 Hello, World!
+
+$ echo 27 | vonal run examples/collatz-in.vsr
+27 82 41 124 62 31 94 ... 8 4 2 1
 ```
 
 That is the PNG being decoded and executed. The picture is the program.
@@ -114,6 +117,7 @@ read its own data but never its own code. A quine is impossible.
 | `countdown` | `54321` |
 | `fibonacci` | first ten terms |
 | `collatz` | trajectory of 6 |
+| `collatz-in` | trajectory of whatever you pipe in |
 | `vega` | `5`, inside a swell |
 | `hello` | `Hello, World!` |
 | `kinetic` | nothing; it draws a staircase into its own field |
