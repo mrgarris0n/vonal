@@ -1,6 +1,8 @@
 import io
 from pathlib import Path
 
+from PIL import Image
+
 from vonal import decode, notation, render
 from vonal.machine import Machine
 
@@ -17,8 +19,17 @@ def output_of(name, max_steps=200_000):
 
 
 def round_trips(name):
+    # Checks two things, not one: that in-memory render/decode is a genuine
+    # inverse (as the round-trip property tests already cover generally),
+    # and -- what nothing else in this suite opens -- that the *shipped*
+    # examples/*.png on disk still decodes to the same plate as the current
+    # .vsr source. Without the second half, editing the source and forgetting
+    # to `vonal compile` leaves a stale PNG that nothing catches.
     plate = notation.parse((EXAMPLES / name).read_text())
-    return decode.decode(render.render(plate)) == plate
+    if decode.decode(render.render(plate)) != plate:
+        return False
+    png_path = (EXAMPLES / name).with_suffix(".png")
+    return decode.decode(Image.open(png_path)) == plate
 
 
 def test_countdown_counts_down_from_five():
