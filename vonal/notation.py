@@ -76,11 +76,14 @@ def parse(text: str) -> Plate:
 
 
 def _token(cell: Cell) -> str:
-    # A void cell's variant and scale are always 0 and are not drawn, so they are
-    # written as dots rather than as the zeroes the model holds.
+    # Variant and scale are written as dots when zero for readability, matching
+    # the parsing convention that accepts both '.' and '0' to mean zero.
     if cell.is_void:
-        return f"...{cell.ground}"
-    return f"{cell.form.value}{cell.variant}{cell.scale}{cell.ground}"
+        ground = "." if cell.ground == 0 else str(cell.ground)
+        return f"...{ground}"
+    variant = "." if cell.variant == 0 else str(cell.variant)
+    scale = "." if cell.scale == 0 else str(cell.scale)
+    return f"{cell.form.value}{variant}{scale}{cell.ground}"
 
 
 def emit(plate: Plate) -> str:
