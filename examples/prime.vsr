@@ -1,0 +1,33 @@
+# prime: prints 1 if the number you give it is prime, 0 if not
+#
+#     $ echo 97 | vonal run examples/prime.vsr
+#     1
+#
+# Trial division, with [n, d] held on the stack throughout.
+#
+# Row 0 reads n, and rejects n < 2 before the loop can start: DUP, push 2, LT,
+# then a turn NORTH. North from row 0 wraps to row 3 on the torus, which is the
+# only reason this fits -- a south turn there would land inside the loop body.
+# Then it seeds d = 2 and drops into row 1.
+#
+# Row 1 is the loop, exactly as wide as the plate so running off the east edge
+# wraps to its own start, entered at column 6 by a turn-east that doubles as the
+# wrap point. Each pass tests d == n first (OVER OVER EQ, turn south to the
+# prime verdict) and only then n % d == 0 (OVER OVER MOD, turn south to the
+# composite verdict). That order matters: testing divisibility first would call
+# 2 composite, since 2 % 2 == 0.
+#
+# Row 2 holds both verdicts. Each is reached heading south, so each begins with
+# a turn-east; the prime branch starts at column 10 and wraps to column 0 to
+# print. Row 3 holds a second "print 0" for the n < 2 rejection, which cannot
+# share row 2's because of where north lands.
+#
+# Correct for every integer: 0, 1 and negatives are rejected by the LT guard,
+# 2 by the ordering above, and everything else by division. Cost is O(n)
+# divisions, so a large prime is slow but finite.
+%plate 11x4
+
++2.6  %..6  o.26  D1.6  ^1.6  o.26  v..6  o.46  o.36  o.16  o..6
+%3.6  %3.6  #4.6  v2.6  o.16  #..6  >..6  %3.6  %3.6  D2.6  v1.6
+o.16  +..6  ...6  >..6  o..6  +..6  ...6  o.46  o.36  o.16  >..6
+o..6  o.16  o.36  o.46  >..6  o..6  +..6  ...6  o.36  o.16  o..6

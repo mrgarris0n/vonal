@@ -2,6 +2,7 @@ import hashlib
 import io
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from vonal import cli, decode, notation, render
@@ -132,6 +133,23 @@ def test_collatz_in_halts_immediately_on_one():
 
 def test_collatz_in_survives_a_full_image_round_trip():
     assert round_trips("collatz-in.vsr")
+
+
+@pytest.mark.parametrize(
+    "n,expected",
+    [
+        (-3, "0"), (0, "0"), (1, "0"),   # turned away by the LT guard before the loop
+        (2, "1"),                        # composite if divisibility is tested first
+        (3, "1"), (4, "0"), (9, "0"), (25, "0"),
+        (29, "1"), (97, "1"), (100, "0"), (101, "1"),
+    ],
+)
+def test_prime_decides_correctly(n, expected):
+    assert output_of("prime.vsr", stdin=f"{n}\n") == expected
+
+
+def test_prime_survives_a_full_image_round_trip():
+    assert round_trips("prime.vsr")
 
 
 MIRROR_PROFILE = "1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 "

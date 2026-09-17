@@ -122,6 +122,7 @@ read its own data but never its own code. A quine is impossible.
 | `hello` | `Hello, World!` |
 | `kinetic` | nothing; it draws a staircase into its own field |
 | `mirror` | the profile of its own swell, read back with `get` |
+| `prime` | `1` or `0`, deciding a piped-in number |
 
 ```bash
 .venv/bin/pytest
