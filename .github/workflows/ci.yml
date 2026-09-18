@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       # Report every version rather than stopping at the first failure: the
       # point of the matrix is to find out which ones actually work, since
