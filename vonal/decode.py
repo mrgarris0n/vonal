@@ -2,11 +2,25 @@
 
 from __future__ import annotations
 
+import os
+import threading
+
 from PIL import Image
 
 from vonal import isa, palette, render
 from vonal.cell import Cell, Form, Plate
-from vonal.errors import LoadError
+from vonal.errors import LoadError, VonalError
+
+# A cell is 64 by 64 pixels, so a real program is a legitimately enormous
+# image: a 170x165 plate is 115 megapixels, well past Pillow's 89 megapixel
+# decompression-bomb threshold. Vonal compiled that plate itself, and loading
+# it back printed a DecompressionBombWarning over correct output. The guard is
+# still worth having, since a small PNG that inflates to gigabytes is a real
+# attack and a plate is not always one you wrote, so it is raised rather than
+# switched off. 256x256 cells is the ceiling: 16384 pixels square, about 800MB
+# once decoded to RGB, which is the practical limit anyway.
+MAX_CELLS = 256 * 256
+MAX_PIXELS = MAX_CELLS * render.CELL * render.CELL
 
 
 def _colours(block: Image.Image, x: int, y: int) -> list[tuple[int, int, int]]:
@@ -50,6 +64,56 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     if isa.lookup(form, variant) is None:
         raise LoadError(x, y, f"undefined instruction: {form.name} variant {variant}")
     return Cell(form, variant, scale, ground)
+
+
+# Pillow reads the ceiling from a module global inside Image.open, so it
+# cannot be passed per call and has to be set around the call instead. The
+# lock stops two concurrent loads interleaving their save and restore, which
+# would leave the host's limit at whatever the inner call set, permanently.
+_LIMIT_LOCK = threading.Lock()
+
+
+def _open_unguarded(path: str | os.PathLike[str]) -> Image.Image:
+    """Open a plate image with Pillow's bomb check suspended.
+
+    Vonal judges the size itself, just below. Deferring to Pillow's guard
+    meant living with its two bands: over the ceiling it warns and hands the
+    image over anyway, over twice it raises. Turning that first case into a
+    refusal took warnings.catch_warnings, which mutates a second process-wide
+    global and is no more thread-safe than this one. Checking here instead
+    makes the refusal deterministic, ours, and able to say what the size was.
+
+    The mutation covers only the header read, not the decode, and is held
+    under the lock. It is still a window: another thread opening an unrelated
+    image inside it sees no ceiling. Closing that would mean sniffing the
+    format ourselves, which is a worse trade than a window this narrow.
+
+    Keeping it narrow has one consequence worth naming. Image.crop consults
+    the limit as well, so decode's per-cell crops are judged against whatever
+    the host has set, not against MAX_PIXELS. A crop is one 64x64 cell, 4096
+    pixels, so a host would have to have set the limit near zero for that to
+    matter, and the alternative is holding this lock for the whole decode:
+    twelve seconds on a large plate, rather than the header read.
+    """
+    with _LIMIT_LOCK:
+        previous = Image.MAX_IMAGE_PIXELS
+        Image.MAX_IMAGE_PIXELS = None
+        try:
+            return Image.open(path)
+        finally:
+            Image.MAX_IMAGE_PIXELS = previous
+
+
+def load(path: str | os.PathLike[str]) -> Plate:
+    """Open a plate image and decode it. The only way vonal opens a plate."""
+    with _open_unguarded(path) as image:
+        pixels = image.width * image.height
+        if pixels > MAX_PIXELS:
+            raise VonalError(
+                f"{os.fspath(path)}: {pixels} pixels exceeds the ceiling of "
+                f"{MAX_PIXELS}; a plate may be at most {MAX_CELLS} cells"
+            )
+        return decode(image)
 
 
 def decode(image: Image.Image) -> Plate:

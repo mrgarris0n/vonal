@@ -307,9 +307,18 @@ refuses, exit successfully, and leave the text and the image accepting different
 sets of programs. They accept the same set, and keeping them aligned is
 compile's job.
 
-**Load** (PNG → program): image dimensions not a multiple of 64; a cell with more
-than two distinct colours; a colour outside `vasarely-8`; no matching
-`(form, scale)` template; an undefined `(form, variant)` pair.
+**Load** (PNG → program): image dimensions not a multiple of 64; more than
+65536 cells; a cell with more than two distinct colours; a colour outside
+`vasarely-8`; no matching `(form, scale)` template; an undefined
+`(form, variant)` pair.
+
+The cell ceiling is 256×256, which is 16384 pixels square. It exists because a
+cell is 64 pixels square, so a plate is a legitimately enormous image and trips
+Pillow's decompression-bomb guard at 89 megapixels: a 170×165 plate is 115.
+Removing the guard is wrong, since a plate is not always one you wrote and a
+small PNG that inflates to gigabytes is a real attack, so it is raised to a
+bound a plate can justify. Past it a plate is refused, not merely warned
+about.
 
 Validating variants at load makes opcode validity a whole-program static check: a
 plate that loads cannot contain an invalid instruction.
