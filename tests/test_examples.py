@@ -235,3 +235,81 @@ def test_vega_is_a_swell_and_not_a_flat_field():
     centre = plate.at(plate.width // 2, plate.height // 2).scale
     corner = plate.at(plate.width - 1, plate.height - 1).scale
     assert centre > corner, f"centre {centre} should swell above corner {corner}"
+
+
+BUBBLE_START = [5, 3, 7, 1, 6, 0, 4, 2]
+
+
+def test_bubble_prints_the_sorted_row():
+    assert output_of("bubble.vsr") == "0 1 2 3 4 5 6 7 \n"
+
+
+def test_bubble_survives_a_full_image_round_trip():
+    assert round_trips("bubble.vsr")
+
+
+def test_bubble_sorts_its_own_picture_in_place():
+    # The printed line is only half the output. The other half is the plate:
+    # row 7 starts scrambled and ends as a rising staircase, which is what
+    # `vonal trace` animates. As with kinetic, the field is a copy, so the
+    # plate itself must come through untouched.
+    plate = notation.parse((EXAMPLES / "bubble.vsr").read_text())
+    assert [plate.at(x, 7).scale for x in range(8)] == BUBBLE_START
+
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=50_000)
+    assert machine.halted
+    assert machine.field[7][:8] == [0, 1, 2, 3, 4, 5, 6, 7]
+    assert [plate.at(x, 7).scale for x in range(8)] == BUBBLE_START
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        [0, 1, 2, 3, 4, 5, 6, 7],   # already sorted: 49 iterations, no swaps
+        [7, 6, 5, 4, 3, 2, 1, 0],   # reversed: the worst case
+        [3, 3, 3, 3, 3, 3, 3, 3],   # all equal: GT must not swap on a tie
+        [7, 7, 7, 7, 0, 0, 0, 0],   # every element has to travel the full width
+        [1, 0, 1, 0, 1, 0, 1, 0],   # duplicates interleaved
+        [2, 5, 5, 1, 0, 7, 7, 3],
+    ],
+)
+def test_bubble_sorts_whatever_is_in_its_data_row(values):
+    # The claim is that this sorts, not that it recites one answer. Reseeding
+    # row 7 is the only way to tell the two apart: a plate that merely printed
+    # 0..7 would pass the test above and fail every case here.
+    plate = notation.parse((EXAMPLES / "bubble.vsr").read_text())
+    for x, value in enumerate(values):
+        cell = plate.at(x, 7)
+        plate = plate.replaced(x, 7, Cell(cell.form, cell.variant, value, cell.ground))
+
+    out = io.StringIO()
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
+    machine.run(max_steps=50_000)
+
+    assert machine.halted
+    assert machine.field[7][:8] == sorted(values)
+    assert out.getvalue() == " ".join(str(v) for v in sorted(values)) + " \n"
+
+
+def test_the_shipped_bubble_gif_is_not_stale(tmp_path):
+    # Committed so the sort is visible without running anything, and therefore
+    # able to drift from the plate exactly as the PNGs could. Note the step
+    # cap: this plate runs 1801 steps, so the trace default of 1000 would stop
+    # it mid-sort and the last frame would not be sorted at all.
+    fresh = tmp_path / "fresh.gif"
+    assert cli.main(
+        ["trace", str(EXAMPLES / "bubble.vsr"), str(fresh), "--max-steps", "2000"]
+    ) == 0
+
+    def summary(path):
+        with Image.open(path) as im:
+            frames = [f.convert("RGB") for f in ImageSequence.Iterator(im)]
+        return (
+            len(frames),
+            [decode.decode(frames[0]).at(x, 7).scale for x in range(8)],
+            [decode.decode(frames[-1]).at(x, 7).scale for x in range(8)],
+        )
+
+    assert summary(EXAMPLES / "bubble.gif") == summary(fresh)
+    assert summary(fresh) == (37, BUBBLE_START, [0, 1, 2, 3, 4, 5, 6, 7])

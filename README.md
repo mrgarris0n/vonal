@@ -101,10 +101,16 @@ eye never reaches. Void padding cannot carry a composition, since a void draws
 nothing and must have scale 0, so the padding is unreached push discs instead.
 
 `examples/kinetic.vsr` goes the other way and writes the field as it runs, so
-`vonal trace` on it produces frames that differ. Every other plate traces to the
-same image repeated. `examples/kinetic.gif` is that trace animated: runs of
-identical frames are collapsed into one held proportionally longer, so the file
-stays small without the timing changing.
+`vonal trace` on it produces frames that differ. `examples/kinetic.gif` is that
+trace animated: runs of identical frames are collapsed into one held
+proportionally longer, so the file stays small without the timing changing.
+
+`examples/bubble.vsr` is the same trick doing real work. Row 7 holds eight
+values as the sizes of eight discs, and the program bubble sorts that row of
+the field in place, so the picture rearranges itself into a rising staircase
+while it runs. `examples/bubble.gif` is the sort. Mind the step cap when
+retracing it: the plate runs 1801 steps and `trace` stops at 1000 by default,
+which ends the animation mid-sort.
 
 `examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
 scales stop being composition and become the program's input: it prints the
@@ -129,6 +135,7 @@ read its own data but never its own code. A quine is impossible.
 | `mirror` | the profile of its own swell, read back with `get` |
 | `prime` | `1` or `0`, deciding a piped-in number |
 | `span` | the largest of three piped-in characters, and its negation |
+| `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
 
 ```bash
 .venv/bin/pytest

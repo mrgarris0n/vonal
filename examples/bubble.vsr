@@ -1,0 +1,45 @@
+# bubble: a bubble sort that sorts its own picture
+#
+#     $ vonal run examples/bubble.vsr
+#     0 1 2 3 4 5 6 7
+#
+# Row 7 holds the eight values, as the sizes of eight discs. The program sorts
+# that row of the field in place, so the picture rearranges itself into a
+# rising staircase as it runs. `vonal trace examples/bubble.vsr out.gif` shows
+# it happening; examples/bubble.gif is that animation.
+#
+# One counter does the whole sort. k runs 0 to 48 and j = k mod 7, so the 49
+# iterations are seven passes of seven adjacent comparisons, which is enough to
+# sort eight elements. Nothing tracks whether a pass changed anything, so it
+# always runs the full 49: a shorter program for a slower sort.
+#
+# Column 0 seeds k and drops the eye into row 2. The loop is entered at column
+# 1, which leaves the turn-east at column 0 to double as the wrap point, and
+# the stack is [k] at both ends of the row so running off the east edge wraps
+# to the row's own start.
+#
+# Row 3 is the swap. The compare at column 14 turns south only when a > b, and
+# the detour re-reads both values from the field rather than carrying them, so
+# only j has to survive the branch. It runs west, wraps once, and climbs at
+# column 15 onto a turn-east: that turn is not decoration. The detour arrives
+# heading north, and without it the eye would sail up out of the loop.
+#
+# Leaving the loop is awkward for one reason: the detour fills row 3 edge to
+# edge, so there is no way down through it. The eye climbs column 23 instead
+# and wraps over the top of the torus into row 7, then into row 6. On the way
+# it pops k and pushes m = 0 for the printing loop, using two cells that are
+# free precisely because column 23 is the one column nothing else needs.
+#
+# Row 6 prints the sorted row and row 5 adds the newline. Rows 1, 4 and the
+# unreached ends of the others are push discs whose sizes are a swell, as in
+# vega: instructions that never execute, carrying the composition.
+%plate 24x8
+
+v..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5
+o..5  o..7  o..6  o..6  o..6  o.16  o.16  o.16  o.26  o.26  o.26  o.26  o.26  o.26  o.26  o.26  o.16  o.16  o.16  o..6  o..6  o..6  o..7  %1.5
+>..5  %..7  o.76  #4.6  %..5  %..5  o.77  @..7  %2.7  o.17  #..7  o.77  @..7  D..7  v1.7  >..7  %1.7  o.17  #..5  %..5  o.66  o116  D2.7  ^1.5
+%2.5  @1.7  o.76  %4.6  o.35  @..5  o.77  %..7  #..6  o.16  %3.5  @..5  o.75  %..5  <..6  ^..6  <..7  <..7  <..5  @1.5  o.76  %4.6  o.37  %..5
+o..5  o.17  o.16  o.26  o.25  o.35  o.47  o.47  o.56  o.56  o.65  o.65  o.65  o.65  o.56  o.56  o.47  o.47  o.35  o.25  o.26  o.16  o.17  o..5
+o..5  o..7  o..6  o.16  o.25  o.25  o.37  o.37  o.37  >..7  o.17  o127  +1.7  ...7  o.47  o.37  o.37  o.37  o.25  o.25  o.16  o..6  o..7  o..5
+<..5  <..7  <..6  <..6  <..6  <..6  <..6  <..6  <..6  ^1.6  D2.6  o1.6  o.16  %..6  #..6  o.16  +1.6  o1.6  o.46  +..6  @..6  o.76  %..7  <..5
+o.55  o.35  o.75  o.15  o.65  o..5  o.45  o.25  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  o..5  ^..5
