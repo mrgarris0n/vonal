@@ -21,8 +21,7 @@ def _load(path: Path) -> Plate:
         plate = notation.parse(path.read_text())
         isa.validate(plate)
         return plate
-    with Image.open(path) as image:
-        return decode.decode(image)
+    return decode.load(path)
 
 
 def _with_field(plate: Plate, field: list[list[int]]) -> Plate:
@@ -57,8 +56,7 @@ def _cmd_compile(args: argparse.Namespace) -> int:
 
 
 def _cmd_disassemble(args: argparse.Namespace) -> int:
-    with Image.open(args.image) as image:
-        text = notation.emit(decode.decode(image))
+    text = notation.emit(decode.load(args.image))
     if args.out:
         Path(args.out).write_text(text)
     else:

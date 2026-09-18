@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
+import os
+import warnings
+from contextlib import contextmanager
+
 from PIL import Image
 
 from vonal import isa, palette, render
 from vonal.cell import Cell, Form, Plate
-from vonal.errors import LoadError
+from vonal.errors import LoadError, VonalError
+
+# A cell is 64 by 64 pixels, so a real program is a legitimately enormous
+# image: a 170x165 plate is 115 megapixels, well past Pillow's 89 megapixel
+# decompression-bomb threshold. Vonal compiled that plate itself, and loading
+# it back printed a DecompressionBombWarning over correct output. The guard is
+# still worth having, since a small PNG that inflates to gigabytes is a real
+# attack and a plate is not always one you wrote, so it is raised rather than
+# switched off. 256x256 cells is the ceiling: 16384 pixels square, about 800MB
+# once decoded to RGB, which is the practical limit anyway.
+MAX_CELLS = 256 * 256
+MAX_PIXELS = MAX_CELLS * render.CELL * render.CELL
 
 
 def _colours(block: Image.Image, x: int, y: int) -> list[tuple[int, int, int]]:
@@ -50,6 +65,39 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     if isa.lookup(form, variant) is None:
         raise LoadError(x, y, f"undefined instruction: {form.name} variant {variant}")
     return Cell(form, variant, scale, ground)
+
+
+@contextmanager
+def _bomb_guard():
+    """Raise Pillow's pixel ceiling for the duration of one open.
+
+    The limit is a module global that Pillow consults inside Image.open, so it
+    has to be set around the call rather than passed to it, and put back after:
+    importing vonal must not quietly relax the limit for every other image the
+    host program happens to open. Past the ceiling Pillow only warns and
+    carries on, which is how a 115 megapixel plate came to load and run with a
+    warning on stderr, so the warning is promoted to an error here and turned
+    into a VonalError by the caller.
+    """
+    previous = Image.MAX_IMAGE_PIXELS
+    Image.MAX_IMAGE_PIXELS = MAX_PIXELS
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            yield
+    finally:
+        Image.MAX_IMAGE_PIXELS = previous
+
+
+def load(path: str | os.PathLike[str]) -> Plate:
+    """Open a plate image and decode it. The only way vonal opens a plate."""
+    try:
+        with _bomb_guard(), Image.open(path) as image:
+            return decode(image)
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise VonalError(
+            f"{os.fspath(path)}: {exc} A plate may be at most {MAX_CELLS} cells."
+        ) from exc
 
 
 def decode(image: Image.Image) -> Plate:
