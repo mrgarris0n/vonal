@@ -316,6 +316,66 @@ def test_the_shipped_bubble_gif_is_not_stale(tmp_path):
     assert summary(fresh) == (37, BUBBLE_START, [0, 1, 2, 3, 4, 5, 6, 7])
 
 
+SWELL_TOP = 5  # the first composition row; rows 0-4 are the program
+SWELL_FLAT = 3  # the one size every square ships at
+
+
+def swell_falloff(x, y):
+    """The radial falloff swell.vsr computes, in region coordinates."""
+    return 7 - ((x - 7) ** 2 + (y - 7) ** 2) // 14
+
+
+def swell_expected():
+    return [[swell_falloff(x, y) for x in range(15)] for y in range(15)]
+
+
+def swell_field(plate):
+    return [[plate.at(x, y + SWELL_TOP).scale for x in range(15)] for y in range(15)]
+
+
+def test_the_swell_falloff_uses_the_whole_range_and_no_more():
+    # Why the loop body needs no clamp, and so no branch: PUT rejects anything
+    # outside 0-7 as a runtime fault, and the corner is 7*7 + 7*7 = 98 with
+    # 98 // 14 == 7 exactly, so the falloff reaches both ends and neither past.
+    values = [v for row in swell_expected() for v in row]
+    assert (min(values), max(values)) == (0, 7)
+
+
+def test_swell_ships_flat_and_computes_its_own_bulge():
+    plate = notation.parse((EXAMPLES / "swell.vsr").read_text())
+    # The claim is that the picture is computed, not authored. A plate that
+    # shipped with the swell already in its scales would pass every other
+    # assertion here while demonstrating nothing.
+    assert set(v for row in swell_field(plate) for v in row) == {SWELL_FLAT}
+
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=20_000)
+
+    assert machine.halted
+    assert [machine.field[y + SWELL_TOP] for y in range(15)] == swell_expected()
+    # The field is a copy, as with kinetic and bubble: the plate is immutable.
+    assert set(v for row in swell_field(plate) for v in row) == {SWELL_FLAT}
+
+
+def test_swell_survives_a_full_image_round_trip():
+    assert round_trips("swell.vsr")
+
+
+def test_the_shipped_swell_gif_is_not_stale():
+    # Not re-traced the way bubble's is. This plate runs 13,516 steps and
+    # `trace` renders one frame per step, so regenerating it here would cost
+    # minutes for a plate that changes 201 times. The two frames that carry
+    # the claim are enough: a GIF of some older plate fails on the last one.
+    with Image.open(EXAMPLES / "swell.gif") as image:
+        frames = [frame.convert("RGB") for frame in ImageSequence.Iterator(image)]
+
+    # 202, not 226: 24 of the 225 cells compute to the size they already
+    # shipped at, and a write that changes no pixel is collapsed away.
+    assert len(frames) == 202
+    assert set(v for row in swell_field(decode.decode(frames[0])) for v in row) == {SWELL_FLAT}
+    assert swell_field(decode.decode(frames[-1])) == swell_expected()
+
+
 @pytest.mark.parametrize(
     "name,stdin",
     [("countdown.vsr", ""), ("hello.vsr", ""), ("mirror.vsr", ""),
