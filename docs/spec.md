@@ -132,13 +132,13 @@ it encodes comparison and needs no direction.
 | Form | Glyph | Family | Variants (form colour index) |
 |---|---|---|---|
 | void | `.` | HALT | — (variant ignored) |
-| disc | `o` | PUSH | `0` push `scale` · `1` pop `v`, push `v*8 + scale` |
-| square | `#` | ARITH | `0` add `1` sub `2` mul `3` div `4` mod `5` neg |
-| rhombus | `%` | STACK | `0` dup `1` pop `2` swap `3` over `4` roll |
-| triangle | `^ > v <` | TURN | `0` always · `1` if top ≠ 0 · `2` if top = 0 |
-| half-disc | `D` | COMPARE | `0` gt `1` lt `2` eq |
-| ring | `@` | FIELD | `0` get · `1` put |
-| cross | `+` | IO | `0` out num `1` out char `2` in num `3` in char |
+| disc | `o` | PUSH | `1` push `scale` · `2` pop `v`, push `v*8 + scale` |
+| square | `#` | ARITH | `1` add `2` sub `3` mul `4` div `5` mod `6` neg |
+| rhombus | `%` | STACK | `1` dup `2` pop `3` swap `4` over `5` roll |
+| triangle | `^ > v <` | TURN | `1` always · `2` if top ≠ 0 · `3` if top = 0 |
+| half-disc | `D` | COMPARE | `1` gt `2` lt `3` eq |
+| ring | `@` | FIELD | `1` get · `2` put |
+| cross | `+` | IO | `1` out num `2` out char `3` in num `4` in char |
 
 Any `(form, variant)` pair not listed is a **load error**, not a no-op (§7).
 
@@ -272,8 +272,8 @@ would undermine the claim that the picture is the program.
 | `0` `#111111` | `1` `#F2F0E9` | `2` `#2B4EA2` | `3` `#4FA3D1` |
 | `4` `#1E9B6B` | `5` `#F2C230` | `6` `#D64530` | `7` `#7B4B9B` |
 
-**Geometry.** A form is inscribed in a square of side `L(s) = 8 + 6s` pixels,
-`s ∈ 0..7`, giving 8–50 px, centred in the 64 px cell at integer offset
+**Geometry.** A form is inscribed in a square of side `L(s) = 8 + 7s` pixels,
+`s ∈ 0..7`, giving 8–57 px, centred in the 64 px cell at floored offset
 `(64 - L)/2`. The bound matters: `L(7) = 50` leaves at least 7 px of ground on
 every side, so a non-void cell always shows exactly two colours. Ring thickness
 is `max(2, L//4)`; cross arm thickness is `max(2, L//3)`.
