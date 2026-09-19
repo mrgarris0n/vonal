@@ -142,10 +142,32 @@ That is the only self-reference available. The field is built from the scale
 channel alone and no opcode exposes a cell's form, variant or ground, so a
 program can read its own data but never its own code.
 
-That rules out introspection, not quines. A quine does not read itself, it
-carries its own source as data, and `get` makes the data section
-self-describing: a disc can print its own token by reading its own scale. None
-is written yet.
+That rules out introspection, not quines. `examples/quine.vsr` prints itself,
+byte for byte:
+
+```bash
+$ vonal run examples/quine.vsr | diff - examples/quine.vsr && echo identical
+identical
+```
+
+It carries no comment header, because a comment is not part of the canonical
+form and no plate could reproduce one.
+
+It works because `get` makes the data self-describing. Rows 5 to 95 are all
+push discs on a black ground, so each one's token is `o1<scale>.` and the
+program can print it by reading its own scale. The ground has to be uniform:
+it is the one channel no opcode can read, so the printer emits that last
+character from a literal and could not follow a ground that varied. Keying it
+cell by cell, which is what every other plate now does, is the one thing a
+quine forbids. Only rows 0 to 4, the program itself, cannot be
+derived that way, so their text is encoded in those same scales as base-7
+digits, three cells per character, stored as 1 to 7 so no data cell is ever a
+dot. One pass decodes the header and the program, a second generates
+everything below it.
+
+Those cells are therefore read twice, once as themselves and once as digits,
+which is the whole trick and also its cost: resize a disc in the overlap and
+the plate stops describing itself.
 
 ## Examples
 
@@ -163,6 +185,7 @@ is written yet.
 | `span` | the largest of three piped-in characters, and its negation |
 | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
 | `folklore` | `613`, the total of its own glyph sizes |
+| `quine` | its own source, byte for byte |
 
 ```bash
 .venv/bin/pytest
