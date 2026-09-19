@@ -171,21 +171,21 @@ the plate stops describing itself.
 
 ## Examples
 
-| Plate | Output |
-|---|---|
-| `countdown` | `54321` |
-| `fibonacci` | first ten terms |
-| `collatz` | trajectory of 6 |
-| `collatz-in` | trajectory of whatever you pipe in |
-| `vega` | `5`, inside a swell |
-| `hello` | `Hello, World!` |
-| `kinetic` | nothing; it draws a staircase into its own field |
-| `mirror` | the profile of its own swell, read back with `get` |
-| `prime` | `1` or `0`, deciding a piped-in number |
-| `span` | the largest of three piped-in characters, and its negation |
-| `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
-| `folklore` | `613`, the total of its own glyph sizes |
-| `quine` | its own source, byte for byte |
+| | Plate | Output |
+|---|---|---|
+| <img src="docs/previews/countdown.png" width="200" height="86" alt="countdown"> | `countdown` | `54321` |
+| <img src="docs/previews/fibonacci.png" width="200" height="43" alt="fibonacci"> | `fibonacci` | first ten terms |
+| <img src="docs/previews/collatz.png" width="200" height="33" alt="collatz"> | `collatz` | trajectory of 6 |
+| <img src="docs/previews/collatz-in.png" width="200" height="33" alt="collatz-in"> | `collatz-in` | trajectory of whatever you pipe in |
+| <img src="docs/previews/vega.png" width="120" height="120" alt="vega"> | `vega` | `5`, inside a swell |
+| <img src="docs/previews/hello.png" width="150" height="120" alt="hello"> | `hello` | `Hello, World!` |
+| <img src="docs/previews/kinetic.png" width="180" height="120" alt="kinetic"> | `kinetic` | nothing; it draws a staircase into its own field |
+| <img src="docs/previews/mirror.png" width="138" height="120" alt="mirror"> | `mirror` | the profile of its own swell, read back with `get` |
+| <img src="docs/previews/prime.png" width="200" height="109" alt="prime"> | `prime` | `1` or `0`, deciding a piped-in number |
+| <img src="docs/previews/span.png" width="200" height="27" alt="span"> | `span` | the largest of three piped-in characters, and its negation |
+| <img src="docs/previews/bubble.png" width="200" height="67" alt="bubble"> | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
+| <img src="docs/previews/folklore.png" width="180" height="120" alt="folklore"> | `folklore` | `613`, the total of its own glyph sizes |
+| <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash
 .venv/bin/pytest
