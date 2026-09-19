@@ -7,7 +7,7 @@ import pytest
 from PIL import Image, ImageSequence
 
 from vonal import cli, decode, isa, notation, render
-from vonal.cell import Cell, Plate
+from vonal.cell import Cell, Form, Plate
 from vonal.machine import Machine
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
@@ -409,3 +409,71 @@ def test_vega_no_longer_needs_a_ground_that_advertises_its_code():
     # And the rekeyed ground gives the figures somewhere to go.
     figures = {c.figure for row in plate.cells for c in row if not c.is_void}
     assert len(figures) > 1, "the swell is still monochrome"
+
+
+QUINE = EXAMPLES / "quine.vsr"
+
+
+def test_quine_prints_its_own_source_exactly():
+    # The whole claim, and it has to be byte equality against the file on
+    # disk, not against a regenerated plate: quine.vsr therefore carries no
+    # comment header, because a comment is not part of the canonical form and
+    # the plate could never reproduce it.
+    source = QUINE.read_text()
+    assert output_of("quine.vsr", max_steps=1_000_000) == source
+
+
+def test_the_quine_image_prints_the_same_source():
+    # The PNG is the canonical program, so the claim has to survive the round
+    # trip through pixels, not just hold for the text form.
+    with Image.open(EXAMPLES / "quine.png") as image:
+        plate = decode.decode(image)
+    printed = output_of_plate(plate, max_steps=1_000_000, label="quine.png")
+    assert printed == QUINE.read_text()
+
+
+def test_the_quine_is_a_fixed_point_of_the_whole_toolchain():
+    # Stronger than printing itself: what it prints must compile to the same
+    # image, so output -> compile -> decode -> run is a closed loop.
+    plate = notation.parse(QUINE.read_text())
+    printed = output_of_plate(plate, max_steps=1_000_000, label="quine")
+    assert notation.parse(printed) == plate
+    assert decode.decode(render.render(notation.parse(printed))) == plate
+
+
+def test_the_quine_reads_its_own_data_rather_than_reciting_it():
+    # A plate that merely spelled out 33326 characters would pass every test
+    # above. Resize one padding disc past the encoded region: the output must
+    # move in exactly one place, the token for that cell, and must still be a
+    # true description of the plate it now is.
+    plate = notation.parse(QUINE.read_text())
+    x, y = 40, 95
+    cell = plate.at(x, y)
+    assert cell.form is Form.DISC and cell.scale != 0
+
+    changed = 1 + (cell.scale % 7)
+    perturbed = plate.replaced(x, y, Cell(cell.form, cell.variant, changed, cell.ground))
+    printed = output_of_plate(perturbed, max_steps=1_000_000, label="quine perturbed")
+
+    assert printed == notation.emit(perturbed), "it stopped describing itself"
+    moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
+    assert len(moved) == 1, f"{len(moved)} characters moved, expected 1"
+
+
+def test_a_cell_inside_the_encoded_region_is_load_bearing_twice():
+    # The other half of the same point, and the reason the cell above had to
+    # be chosen past row 95. Rows 5 onward are printed from their own scales
+    # AND read as the base-7 digits spelling out rows 0 to 4. A cell in that
+    # overlap is read twice, so changing it breaks the description: the token
+    # printed for the cell moves, and so does a character of the program text
+    # it helps encode. Self-reference here is not free.
+    plate = notation.parse(QUINE.read_text())
+    cell = plate.at(40, 90)
+    perturbed = plate.replaced(
+        40, 90, Cell(cell.form, cell.variant, 1 + (cell.scale % 7), cell.ground)
+    )
+    printed = output_of_plate(perturbed, max_steps=1_000_000, label="quine data")
+
+    assert printed != notation.emit(perturbed)
+    moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
+    assert len(moved) > 1, "a data cell should disturb more than its own token"
