@@ -1,0 +1,71 @@
+# swell: a flat chequer that computes its own bulge
+#
+#     $ vonal trace examples/swell.vsr swell.gif --max-steps 14000
+#
+# The plate ships flat. Every square in rows 5 to 19 is the same size, a
+# regular lattice with nothing to look at. The program walks all 225 of them
+# and writes a radial falloff into their scales, so the lattice swells into a
+# sphere while it runs. examples/swell.gif is that inflation.
+#
+# This inverts vega. There the swell is authored into the scales and the
+# program ignores it. Here the swell is what the program computes, and the
+# picture that ships is the one from before the idea arrived.
+#
+# The falloff is
+#
+#     scale = 7 - (dx*dx + dy*dy) / 14,  dx = x - 7,  dy = y - 7
+#
+# and two things about it belong to this language rather than merely running
+# in it. dx*dx is never negative, so no absolute value is needed, and an abs
+# would cost a comparison, which in a 2D grid is a physical detour. And the
+# range is exact: the corner is dx*dx + dy*dy = 98, and 98/14 = 7, so scale
+# lands in 0 to 7 by construction. PUT rejects anything outside that range as
+# a runtime fault, so a formula that cannot leave it is the difference between
+# a loop body of straight-line arithmetic and one threaded around two
+# branches. This body has no branch at all. The only control flow is the loop.
+#
+# One counter does it: k runs 0 to 224, x = k mod 15 and y = k / 15, which is
+# the trick bubble uses for its passes. push 3 / roll / push 5 is the whole
+# address calculation. ROLL rotates [x, y, s] into [s, x, y], which is the
+# order PUT pops them in, and 5 is the row the composition starts on.
+#
+# The body is 37 cells and a row is 15, so the loop is a cycle through rows 1
+# to 4 rather than one wrapping row. East along row 1, south at column 14,
+# west along row 2, south at column 1, east along row 3, south at column 14,
+# west along row 4, then up column 0 and back to the start. The turns that are
+# not corners are no-ops: a turn that re-states the heading the eye already
+# has costs a step and nothing else, which is what the spare cells hold.
+#
+# k is seeded at -1 because the increment sits at the top of the cycle rather
+# than the bottom. The test at (13,1) turns north when k reaches 225, onto the
+# void at (13,0) -- the one cell here that draws nothing, placed in the
+# program band where the composition does not miss it.
+#
+# Every square in the field is ADD. Only the ground alternates, and because
+# the variant is an offset rather than a colour the figure alternates with it:
+# cream on black, cobalt on cream. One instruction, two colours, which is what
+# the offset encoding was for. The ground has no semantics anywhere, so the
+# same chequer runs under the program band, and the code shows only as the
+# glyphs it needs.
+%plate 15x20
+
+o11.  #631  v13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  ...1  #13.
+>131  >13.  >131  o11.  #131  %13.  o131  o24.  o211  D33.  >131  >13.  >131  ^23.  v131
+^13.  v131  %13.  #231  o17.  %431  #43.  o271  o11.  %431  #53.  o271  o11.  %131  <13.
+^131  >13.  #331  %43.  o171  #23.  %131  #33.  #131  o11.  o261  #43.  o171  %33.  v131
+^13.  <131  <13.  <131  <13.  <131  <13.  <131  @23.  #131  o15.  %531  o13.  #231  <13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131
+#13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.
+#131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131  #13.  #131

@@ -126,6 +126,22 @@ while it runs. `examples/bubble.gif` is the sort. Retracing it wants
 1000, and stopping at the cap says so rather than quietly handing you an
 animation that ends mid-sort.
 
+`examples/swell.vsr` computes its composition instead of carrying one. It
+ships flat — 225 squares in rows 5 to 19, every one the same size — and the
+program walks all of them and writes a radial falloff into their scales, so
+the lattice inflates into a Vega-series bulge as it runs.
+`examples/swell.gif` is that inflation; retracing it wants
+`--max-steps 14000`. The falloff is `7 - (dx*dx + dy*dy)/14`, and it belongs
+to this language twice over. `dx*dx` is never negative, so no absolute value
+is needed, and an `abs` would cost a comparison, which in a grid is a
+physical detour. And the corner comes to 98 with `98/14 = 7`, so the result
+lands in 0 to 7 by construction — `put` rejects anything outside that range,
+so a formula that cannot leave it is what lets the body run straight through
+without a single branch. Every square in the field is the same instruction,
+`add`. Only the ground alternates, and the figure alternates with it because
+the variant is an offset: one instruction, two colours. It is the inverse of
+`vega`, where the swell is authored and the program ignores it.
+
 `examples/folklore.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
 appear as grounds and all eight as figures. The figures follow the ground
@@ -185,6 +201,7 @@ the plate stops describing itself.
 | <img src="docs/previews/prime.png" width="200" height="109" alt="prime"> | `prime` | `1` or `0`, deciding a piped-in number |
 | <img src="docs/previews/span.png" width="200" height="27" alt="span"> | `span` | the largest of three piped-in characters, and its negation |
 | <img src="docs/previews/bubble.png" width="200" height="67" alt="bubble"> | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
+| <img src="docs/previews/swell.png" width="90" height="120" alt="swell"> | `swell` | nothing; it inflates its own flat lattice into a sphere |
 | <img src="docs/previews/folklore.png" width="180" height="120" alt="folklore"> | `folklore` | `613`, the total of its own glyph sizes |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
