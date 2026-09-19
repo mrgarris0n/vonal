@@ -36,6 +36,7 @@ vonal disassemble in.png [out.vsr]    # image back to text
 vonal run         plate [--max-steps N]   # accepts .vsr or .png
 vonal trace       plate outdir/       # one PNG frame per step
 vonal trace       plate anim.gif     # or an animated GIF (--frame-ms N)
+vonal --version                       # the installed version
 ```
 
 ## Notation

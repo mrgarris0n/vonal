@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,16 @@ from vonal.cli import main
 from vonal.errors import LoadError
 
 HELLO = "%plate 3x1\n\no157  +1.7  ....\n"
+
+
+def test_version_reports_the_installed_distribution(capsys):
+    # Deliberately compared against the packaged metadata rather than a
+    # literal: the point is that the CLI has no number of its own to drift
+    # from pyproject's, so a hardcoded one here would fail the day it is bumped.
+    with pytest.raises(SystemExit) as exit_info:
+        main(["--version"])
+    assert exit_info.value.code == 0
+    assert capsys.readouterr().out.strip() == f"vonal {version('vonal')}"
 
 
 def test_compile_then_run_the_image(tmp_path, capsys):
