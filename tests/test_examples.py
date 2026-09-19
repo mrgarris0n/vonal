@@ -349,3 +349,48 @@ def test_a_plate_can_be_recoloured_without_changing_what_it_does(name, stdin):
     figures = {c.figure for row in recoloured.cells for c in row if not c.is_void}
     assert len(grounds) == 8, "the recolouring did not exercise every ground"
     assert len(figures) == 8, f"only {len(figures)} figure colours reachable"
+
+
+def _scale_total(plate):
+    return sum(cell.scale for row in plate.cells for cell in row)
+
+
+def test_folklore_prints_its_own_weight():
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    # Not a hardcoded 613: the number has to be the sum the plate actually
+    # carries, so regenerating the composition cannot leave the two disagreeing.
+    assert output_of("folklore.vsr") == f"{_scale_total(plate)}\n"
+
+
+def test_folklore_survives_a_full_image_round_trip():
+    assert round_trips("folklore.vsr")
+
+
+@pytest.mark.parametrize("x,y", [(6, 13), (3, 9), (11, 7), (23, 15), (1, 3)])
+def test_folklore_weighs_the_picture_rather_than_reciting_a_number(x, y):
+    # The claim is that it reads all 384 cells, its own loop included, so
+    # resizing any one of them must move the total by exactly that much.
+    # (1,3) is an instruction in the loop body, which is the interesting case:
+    # the program counts itself.
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    before = int(output_of_plate(plate, label="folklore"))
+    assert before == _scale_total(plate)
+
+    cell = plate.at(x, y)
+    assert not cell.is_void
+    changed = (cell.scale + 3) % 8
+    perturbed = plate.replaced(x, y, Cell(cell.form, cell.variant, changed, cell.ground))
+
+    after = int(output_of_plate(perturbed, label="folklore"))
+    assert after == before - cell.scale + changed
+
+
+def test_folklore_uses_every_colour_as_both_ground_and_figure():
+    # The reason this plate exists. Under the old absolute encoding it was
+    # impossible: the variant was the figure colour, so only the six colours
+    # some opcode used could be drawn, and every push disc was black.
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    grounds = {c.ground for row in plate.cells for c in row}
+    figures = {c.figure for row in plate.cells for c in row if not c.is_void}
+    assert grounds == set(range(8)), f"grounds {sorted(grounds)}"
+    assert figures == set(range(8)), f"figures {sorted(figures)}"

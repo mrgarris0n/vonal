@@ -123,6 +123,14 @@ while it runs. `examples/bubble.gif` is the sort. Mind the step cap when
 retracing it: the plate runs 1801 steps and `trace` stops at 1000 by default,
 which ends the animation mid-sort.
 
+`examples/folklore.vsr` is what the offset encoding buys. Every cell is its
+own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
+appear as grounds and all eight as figures. The figures follow the ground
+diagonally because the variant is an offset, and where they break the diagonal
+is where an instruction sits: you choose which channel carries the clean
+pattern, and the other one records the code. It prints the sum of all 384
+scales, its own loop included, so resizing any glyph moves the number.
+
 `examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
 scales stop being composition and become the program's input: it prints the
 profile of its own sphere. The same pixels are decoration or data depending only
@@ -152,6 +160,7 @@ is written yet.
 | `prime` | `1` or `0`, deciding a piped-in number |
 | `span` | the largest of three piped-in characters, and its negation |
 | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
+| `folklore` | `613`, the total of its own glyph sizes |
 
 ```bash
 .venv/bin/pytest
