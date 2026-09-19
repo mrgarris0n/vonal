@@ -154,8 +154,12 @@ It carries no comment header, because a comment is not part of the canonical
 form and no plate could reproduce one.
 
 It works because `get` makes the data self-describing. Rows 5 to 95 are all
-push discs, so each one's token is `o1<scale>7` and the program can print it
-by reading its own scale. Only rows 0 to 4, the program itself, cannot be
+push discs on a black ground, so each one's token is `o1<scale>.` and the
+program can print it by reading its own scale. The ground has to be uniform:
+it is the one channel no opcode can read, so the printer emits that last
+character from a literal and could not follow a ground that varied. Keying it
+cell by cell, which is what every other plate now does, is the one thing a
+quine forbids. Only rows 0 to 4, the program itself, cannot be
 derived that way, so their text is encoded in those same scales as base-7
 digits, three cells per character, stored as 1 to 7 so no data cell is ever a
 dot. One pass decodes the header and the program, a second generates
