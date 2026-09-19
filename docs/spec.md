@@ -121,7 +121,8 @@ colour, immediate from scale → execute → advance one cell along the heading,
 wrapping. Triangles rewrite the heading before the advance.
 
 **Halting.** The eye enters a void cell. Non-termination is not an error;
-`--max-steps` bounds it.
+`--max-steps` bounds it. Stopping at that bound is reported on stderr, because
+a capped run and a finished one are otherwise indistinguishable from outside.
 
 ## 4. Forms and instruction set
 
@@ -356,7 +357,8 @@ no-oped.
 Errors report the grid cell `(x, y)`. Because the notation is itself a grid, that
 maps back to a `.vsr` token positionally, with no sourcemap needed.
 
-Exit codes: `0` on clean halt, non-zero on any error.
+Exit codes: `0` on clean halt or a run stopped by `--max-steps`, non-zero on any
+error. The cap is a bound the user asked for, not a fault.
 
 ## 8. Architecture
 

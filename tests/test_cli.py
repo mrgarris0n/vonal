@@ -192,6 +192,40 @@ def test_max_steps_stops_a_nonterminating_plate(tmp_path):
     assert main(["run", str(src), "--max-steps", "10"]) == 0
 
 
+def test_run_says_so_when_the_cap_stopped_it_rather_than_a_halt(tmp_path, capsys):
+    # Without this the two outcomes are identical from outside: partial output,
+    # exit 0. A plate cut off mid-answer looks exactly like one that finished.
+    src = tmp_path / "loop.vsr"
+    src.write_text("%plate 2x1\n\no117  o117\n")
+    assert main(["run", str(src), "--max-steps", "10"]) == 0
+    err = capsys.readouterr().err
+    assert "10 steps" in err and "--max-steps" in err
+
+
+def test_run_that_halts_on_its_own_says_nothing(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    assert main(["run", str(src)]) == 0
+    assert capsys.readouterr().err == ""
+
+
+def test_trace_says_so_when_the_animation_is_cut_short(tmp_path, capsys):
+    # The defect this warns about, in miniature: bubble runs 1801 steps against
+    # a trace default of 1000, so the animation ends halfway up the staircase
+    # and the file gives no sign of it. kinetic caps the same way in 20.
+    gif = tmp_path / "cut.gif"
+    assert main(["trace", str(KINETIC), str(gif), "--max-steps", "20"]) == 0
+    assert gif.exists()
+    assert "20 steps" in capsys.readouterr().err
+
+
+def test_trace_of_a_plate_that_halts_says_nothing(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    assert main(["trace", str(src), str(tmp_path / "frames")]) == 0
+    assert capsys.readouterr().err == ""
+
+
 def test_a_missing_file_exits_nonzero_with_a_message_not_a_traceback(tmp_path, capsys):
     missing = tmp_path / "missing.vsr"
     assert main(["run", str(missing)]) == 1

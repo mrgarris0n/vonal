@@ -121,9 +121,10 @@ proportionally longer, so the file stays small without the timing changing.
 `examples/bubble.vsr` is the same trick doing real work. Row 7 holds eight
 values as the sizes of eight discs, and the program bubble sorts that row of
 the field in place, so the picture rearranges itself into a rising staircase
-while it runs. `examples/bubble.gif` is the sort. Mind the step cap when
-retracing it: the plate runs 1801 steps and `trace` stops at 1000 by default,
-which ends the animation mid-sort.
+while it runs. `examples/bubble.gif` is the sort. Retracing it wants
+`--max-steps 2000`: the plate runs 1801 steps against a `trace` default of
+1000, and stopping at the cap says so rather than quietly handing you an
+animation that ends mid-sort.
 
 `examples/folklore.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours

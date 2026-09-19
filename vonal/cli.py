@@ -64,16 +64,34 @@ def _cmd_disassemble(args: argparse.Namespace) -> int:
     return 0
 
 
+def _warn_if_capped(machine: Machine) -> None:
+    """Say so when the step cap, not a void cell, is what stopped the machine.
+
+    The two are indistinguishable in the output: a capped `run` prints
+    whatever it managed and exits 0, and a capped `trace` writes an animation
+    that simply ends. Staying silent leaves a truncated result looking like a
+    finished one. Not an error, though -- bounding a plate that never halts is
+    what the flag is for -- so this is a note on stderr, not a non-zero exit.
+    """
+    if not machine.halted:
+        print(
+            f"vonal: stopped at {machine.steps} steps without halting; "
+            "raise --max-steps to go further",
+            file=sys.stderr,
+        )
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
-    Machine(_load(Path(args.plate))).run(max_steps=args.max_steps)
+    machine = Machine(_load(Path(args.plate)))
+    machine.run(max_steps=args.max_steps)
+    _warn_if_capped(machine)
     return 0
 
 
-def _trace_frames(plate: Plate, max_steps: int) -> Iterator[Image.Image]:
+def _trace_frames(machine: Machine, max_steps: int) -> Iterator[Image.Image]:
     """The plate as rendered before each step, until it halts or hits the cap."""
-    machine = Machine(plate)
     while True:
-        yield render.render(_with_field(plate, machine.field))
+        yield render.render(_with_field(machine.plate, machine.field))
         if machine.steps >= max_steps or not machine.step():
             return
 
@@ -118,9 +136,9 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
 
 
 def _cmd_trace(args: argparse.Namespace) -> int:
-    plate = _load(Path(args.plate))
+    machine = Machine(_load(Path(args.plate)))
     out = Path(args.out)
-    frames = _trace_frames(plate, args.max_steps)
+    frames = _trace_frames(machine, args.max_steps)
     if out.suffix.lower() == ".gif":
         _save_gif(frames, out, args.frame_ms)
     else:
@@ -129,6 +147,8 @@ def _cmd_trace(args: argparse.Namespace) -> int:
         out.mkdir(parents=True, exist_ok=True)
         for n, frame in enumerate(frames):
             frame.save(out / f"{n:05d}.png")
+    # After the frames are consumed, so the machine has reached its stopping point.
+    _warn_if_capped(machine)
     return 0
 
 
