@@ -21,8 +21,13 @@ FORM = 255
 
 
 def extent(scale: int) -> int:
-    """Side of the square a form is inscribed in, for scale 0..7."""
-    return 8 + 6 * scale
+    """Side of the square a form is inscribed in, for scale 0..7.
+
+    The top of the range leaves a 3 pixel margin, which is as close to filling
+    the cell as the decoder allows: it reads the ground from the corner pixel,
+    so a figure must never reach one.
+    """
+    return 8 + 7 * scale
 
 
 def _box(scale: int) -> tuple[int, int, int, int]:
@@ -102,7 +107,7 @@ def _cell_image(cell: Cell) -> Image.Image:
     if cell.is_void:
         return block
     mask = Image.frombytes("L", (CELL, CELL), template(cell.form, cell.scale))
-    block.paste(Image.new("RGB", (CELL, CELL), palette.rgb(cell.variant)), (0, 0), mask)
+    block.paste(Image.new("RGB", (CELL, CELL), palette.rgb(cell.figure)), (0, 0), mask)
     return block
 
 

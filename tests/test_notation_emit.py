@@ -6,10 +6,10 @@ from tests.strategies import plates
 
 
 def test_emit_writes_the_header_and_aligned_tokens():
-    plate = Plate(2, 1, ((Cell(Form.DISC, 0, 5, 1), Cell(Form.VOID)),))
+    plate = Plate(2, 1, ((Cell(Form.DISC, 1, 5, 1), Cell(Form.VOID)),))
     text = emit(plate)
     assert text.splitlines()[0] == "%plate 2x1"
-    assert "o.51  ...." in text
+    assert "o151  ...." in text
 
 
 def test_emit_writes_a_void_ground_but_dots_for_its_dead_channels():

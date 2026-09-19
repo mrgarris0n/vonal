@@ -49,28 +49,39 @@ itself. `%plate WxH` is the only header, and it must match the grid.
 ```
 %plate 3x1
 
-o.57  +..7  ....
+o157  +1.7  ....
 ```
 
 Push 5, print it, halt.
 
 | Op | Token | Op | Token | Op | Token |
 |---|---|---|---|---|---|
-| push N | `o.N7` | dup | `%0.7` | gt | `D0.7` |
-| push_acc N | `o1N7` | pop | `%1.7` | lt | `D1.7` |
-| add | `#0.7` | swap | `%2.7` | eq | `D2.7` |
-| sub | `#1.7` | over | `%3.7` | get | `@0.7` |
-| mul | `#2.7` | roll | `%4.7` | put | `@1.7` |
-| div | `#3.7` | turn | `v0.7` | out num | `+0.7` |
-| mod | `#4.7` | turn if | `v1.7` | out char | `+1.7` |
-| neg | `#5.7` | turn unless | `v2.7` | in num | `+2.7` |
-| halt | `....` | | | in char | `+3.7` |
+| push N | `o1N7` | dup | `%1.7` | gt | `D1.7` |
+| push_acc N | `o2N7` | pop | `%2.7` | lt | `D2.7` |
+| add | `#1.7` | swap | `%3.7` | eq | `D3.7` |
+| sub | `#2.7` | over | `%4.7` | get | `@1.7` |
+| mul | `#3.7` | roll | `%5.7` | put | `@2.7` |
+| div | `#4.7` | turn | `v1.7` | out num | `+1.7` |
+| mod | `#5.7` | turn if | `v2.7` | out char | `+2.7` |
+| neg | `#6.7` | turn unless | `v3.7` | in num | `+3.7` |
+| halt | `....` | | | in char | `+4.7` |
 
 Replace `v` with `^`, `>` or `<` for the other three turn directions. `push_acc`
 computes `v*8 + N`, so a row of discs spells a base-8 numeral.
 
-The trailing `7` above is the ground colour, chosen because no variant reaches 7
-and a non-void cell requires `variant != ground`. Any other value works.
+The trailing `7` is the ground colour. Any value works, including 7: `ground`
+is unconstrained.
+
+The variant is not a colour. It is the figure colour's **offset** from the
+ground, so the colour drawn is `(ground + variant) mod 8`. Offset 0 would paint
+the figure in the ground's own colour, which is why variants run 1 to 7 and why
+a figure can never match its ground: that is now an identity rather than a rule.
+
+The consequence is worth the indirection. Rotating a cell's figure and ground
+together leaves the instruction untouched, so a whole plate can be recoloured
+without changing a thing it does. All eight colours can be figures, where the
+old absolute encoding could only ever draw six of them and made every `push` a
+black disc.
 
 ## How it runs
 
@@ -118,8 +129,13 @@ profile of its own sphere. The same pixels are decoration or data depending only
 on whether anything reads them.
 
 That is the only self-reference available. The field is built from the scale
-channel alone and no opcode exposes a cell's form or variant, so a program can
-read its own data but never its own code. A quine is impossible.
+channel alone and no opcode exposes a cell's form, variant or ground, so a
+program can read its own data but never its own code.
+
+That rules out introspection, not quines. A quine does not read itself, it
+carries its own source as data, and `get` makes the data section
+self-describing: a disc can print its own token by reading its own scale. None
+is written yet.
 
 ## Examples
 

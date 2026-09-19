@@ -25,13 +25,33 @@ def test_void_cell_must_have_zero_variant_and_scale():
     with pytest.raises(ValueError, match="void"):
         Cell(Form.VOID, scale=3)
     with pytest.raises(ValueError, match="void"):
-        Cell(Form.VOID, variant=3)
+        Cell(Form.VOID, variant=4)
 
 
-def test_non_void_cell_rejects_form_colour_equal_to_ground():
-    Cell(Form.DISC, variant=2, ground=5)  # fine
-    with pytest.raises(ValueError, match="ground"):
-        Cell(Form.DISC, variant=5, ground=5)
+def test_non_void_cell_rejects_variant_zero():
+    # Variant 0 is the offset that would paint the figure in the ground's own
+    # colour, so the cell would render as a void and decode back as one.
+    Cell(Form.DISC, variant=3, ground=5)  # fine
+    with pytest.raises(ValueError, match="variant 1..7"):
+        Cell(Form.DISC, variant=0, ground=5)
+
+
+def test_a_figure_can_never_match_its_own_ground():
+    # What used to be a rule the model enforced is now an identity: no legal
+    # variant can produce a figure the same colour as the ground it sits on.
+    for ground in range(8):
+        for variant in range(1, 8):
+            assert Cell(Form.DISC, variant, 0, ground).figure != ground
+
+
+def test_rotating_figure_and_ground_together_keeps_the_instruction():
+    # The property the relative encoding exists for: a plate can be recoloured
+    # wholesale without changing a single opcode.
+    base = Cell(Form.SQUARE, 4, 3, 0)
+    for shift in range(8):
+        rotated = Cell(base.form, base.variant, base.scale, (base.ground + shift) % 8)
+        assert rotated.variant == base.variant
+        assert rotated.figure == (base.figure + shift) % 8
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -43,7 +63,7 @@ def test_channels_are_range_checked(kwargs):
 
 
 def test_plate_at_wraps_on_the_torus():
-    a, b = Cell(Form.DISC, ground=1), Cell(Form.SQUARE, ground=1)
+    a, b = Cell(Form.DISC, 1, ground=1), Cell(Form.SQUARE, 1, ground=1)
     plate = Plate(2, 1, ((a, b),))
     assert plate.at(0, 0) is a
     assert plate.at(2, 0) is a       # wrapped east
@@ -52,7 +72,7 @@ def test_plate_at_wraps_on_the_torus():
 
 
 def test_plate_replaced_returns_a_new_plate():
-    a = Cell(Form.DISC, ground=1)
+    a = Cell(Form.DISC, 1, ground=1)
     plate = Plate(1, 1, ((a,),))
     other = plate.replaced(0, 0, Cell(Form.VOID))
     assert plate.at(0, 0) is a

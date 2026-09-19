@@ -1,12 +1,13 @@
 import hashlib
 import io
+import random
 from pathlib import Path
 
 import pytest
 from PIL import Image, ImageSequence
 
-from vonal import cli, decode, notation, render
-from vonal.cell import Cell
+from vonal import cli, decode, isa, notation, render
+from vonal.cell import Cell, Plate
 from vonal.machine import Machine
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
@@ -313,3 +314,38 @@ def test_the_shipped_bubble_gif_is_not_stale(tmp_path):
 
     assert summary(EXAMPLES / "bubble.gif") == summary(fresh)
     assert summary(fresh) == (37, BUBBLE_START, [0, 1, 2, 3, 4, 5, 6, 7])
+
+
+@pytest.mark.parametrize(
+    "name,stdin",
+    [("countdown.vsr", ""), ("hello.vsr", ""), ("mirror.vsr", ""),
+     ("bubble.vsr", ""), ("prime.vsr", "97\n"), ("span.vsr", "abc")],
+)
+def test_a_plate_can_be_recoloured_without_changing_what_it_does(name, stdin):
+    # The property the relative encoding exists for, and the reason the
+    # variant is an offset rather than a colour. Rotating a cell's ground
+    # carries its figure along, so the instruction is untouched. Every cell
+    # gets an independent random ground here, which under the old absolute
+    # encoding would have been illegal wherever the ground met the figure
+    # colour, and would have changed the opcode everywhere else.
+    base = notation.parse((EXAMPLES / name).read_text())
+    expected = output_of_plate(base, label=name, stdin=stdin)
+
+    rng = random.Random(1906)
+    recoloured = Plate(base.width, base.height, tuple(
+        tuple(
+            cell if cell.is_void
+            else Cell(cell.form, cell.variant, cell.scale, rng.randrange(8))
+            for cell in row
+        )
+        for row in base.cells
+    ))
+
+    isa.validate(recoloured)
+    assert output_of_plate(recoloured, label=name, stdin=stdin) == expected
+    assert decode.decode(render.render(recoloured)) == recoloured
+
+    grounds = {c.ground for row in recoloured.cells for c in row}
+    figures = {c.figure for row in recoloured.cells for c in row if not c.is_void}
+    assert len(grounds) == 8, "the recolouring did not exercise every ground"
+    assert len(figures) == 8, f"only {len(figures)} figure colours reachable"
