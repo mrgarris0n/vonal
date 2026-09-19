@@ -13,7 +13,7 @@ Two distinct domains, named separately:
   round-trip uses this domain.
 
 Validity here is not cosmetic. A void cell with a non-zero variant or scale, and
-a non-void cell whose form colour equals its ground, are both unrepresentable in
+a non-void cell with variant 0, are both unrepresentable in
 an image, so such plates would fail round-tripping for reasons that are not bugs.
 The same is true of a `plates()` cell whose (form, variant) is not a defined
 instruction: `decode()` must reject it, so it has no meaningful image round trip.
@@ -32,8 +32,8 @@ def cells(draw, loadable=False):
     if form is Form.VOID:
         return Cell(Form.VOID, 0, 0, ground)
     variant = draw(
-        st.integers(0, 7).filter(
-            lambda v: v != ground and (not loadable or isa.lookup(form, v) is not None)
+        st.integers(1, 7).filter(
+            lambda v: not loadable or isa.lookup(form, v) is not None
         )
     )
     return Cell(form, variant, draw(st.integers(0, 7)), ground)

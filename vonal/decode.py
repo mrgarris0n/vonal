@@ -44,7 +44,10 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
         return Cell(Form.VOID, 0, 0, ground)
 
     form_rgb = next(colour for colour in found if colour != ground_rgb)
-    variant = palette.index_of(form_rgb)
+    # The variant is the figure's offset from the ground, so it survives any
+    # rotation of the pair. It can never be 0 here: a figure that matched its
+    # ground would have shown one colour and been read as void above.
+    variant = (palette.index_of(form_rgb) - ground) % 8
 
     # tobytes() predates every Pillow version this project has ever
     # targeted (unlike get_flattened_data(), added in 12.1, or the

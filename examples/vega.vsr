@@ -1,39 +1,52 @@
 # vega: a working program inside a Vasarely swell
 #
-# The eye pushes 5, prints it, and halts on the void at (2,0) -- three cells,
-# top left. Every other cell on the plate is a disc, which is to say a PUSH
-# instruction, and none of them ever executes.
+#     $ vonal run examples/vega.vsr
+#     5
 #
-# Their scales are a radial gradient: largest at the centre, smallest at the
-# corners, so the flat lattice reads as a sphere bulging toward the viewer.
-# That is the Vega effect, and it costs nothing semantically -- a cell's scale
-# is read only by the PUSH family on the cell the eye is standing on, and by a
-# get aimed at its coordinates. This plate uses no get and the eye visits three
-# cells, so all 253 remaining scales are free composition.
+# The eye pushes 5, prints it, adds a newline, and halts on the void at (5,0).
+# Six cells, top left. The other 250 are discs, which is to say PUSH
+# instructions, and none of them ever executes.
 #
-# The three program cells are visible as a disturbance in the top-left of the
-# field: the code is where the swell breaks.
+# Their scales are a radial gradient, largest at the centre and smallest at
+# the corners, so the flat lattice reads as a sphere bulging toward the
+# viewer. That is the Vega effect and it costs nothing semantically: a cell's
+# scale is read only by the PUSH family on the cell the eye is standing on,
+# and by a get aimed at its coordinates. This plate uses no get and the eye
+# visits six cells, so 250 scales are free composition.
 #
-# Ground is cream (1) throughout and every form colour is black (0). A swell
-# wants a tight palette -- varied grounds would compete with the gradient
-# rather than support it.
+# The ground is three concentric bands spaced by a sphere's profile rather
+# than a circle's, so they crowd toward the rim. The figures follow the bands
+# because the variant is an offset from the ground, not a colour: vermilion
+# discs on the yellow core, sky on the cobalt ring, cobalt on the cream field.
+# An earlier version of this file said a varied ground would compete with the
+# gradient. It does not, as long as the bands are concentric with it.
 #
-# Ends with a newline: push 1, push_acc 2 makes 10, then OUT_CHAR.
+# It also used to carry a yellow strip across cells (2,0) to (4,0), which
+# advertised exactly where the code was. That was not a choice. Under the old
+# absolute encoding those three cells had variant 1, which collided with
+# ground 1, and a non-void cell could not share its figure colour with its
+# ground. They needed a different ground and got one. Offsets removed the
+# collision, so they now sit on the same cream as everything around them.
+#
+# One tell survives: the disc at (0,0) is scale 5 because 5 is the operand
+# being pushed, and the corner of a swell is where the scales are smallest.
+# A large disc in the shallowest corner is the code showing through.
+#
 %plate 16x16
 
-o.51  +..1  o.15  o125  +1.5  ...1  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
-o..1  o.11  o.11  o.21  o.21  o.21  o.31  o.31  o.31  o.31  o.21  o.21  o.21  o.11  o.11  o..1
-o.11  o.11  o.21  o.21  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.21  o.21  o.11  o.11
-o.11  o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.41  o.41  o.41  o.31  o.31  o.21  o.21  o.11
-o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.51  o.51  o.41  o.41  o.41  o.31  o.31  o.21  o.21
-o.21  o.21  o.31  o.41  o.41  o.51  o.51  o.51  o.51  o.51  o.51  o.41  o.41  o.31  o.21  o.21
-o.21  o.31  o.31  o.41  o.41  o.51  o.61  o.61  o.61  o.61  o.51  o.41  o.41  o.31  o.31  o.21
-o.21  o.31  o.31  o.41  o.51  o.51  o.61  o.71  o.71  o.61  o.51  o.51  o.41  o.31  o.31  o.21
-o.21  o.31  o.31  o.41  o.51  o.51  o.61  o.71  o.71  o.61  o.51  o.51  o.41  o.31  o.31  o.21
-o.21  o.31  o.31  o.41  o.41  o.51  o.61  o.61  o.61  o.61  o.51  o.41  o.41  o.31  o.31  o.21
-o.21  o.21  o.31  o.41  o.41  o.51  o.51  o.51  o.51  o.51  o.51  o.41  o.41  o.31  o.21  o.21
-o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.51  o.51  o.41  o.41  o.41  o.31  o.31  o.21  o.21
-o.11  o.21  o.21  o.31  o.31  o.41  o.41  o.41  o.41  o.41  o.41  o.31  o.31  o.21  o.21  o.11
-o.11  o.11  o.21  o.21  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.31  o.21  o.21  o.11  o.11
-o..1  o.11  o.11  o.21  o.21  o.21  o.31  o.31  o.31  o.31  o.21  o.21  o.21  o.11  o.11  o..1
-o..1  o..1  o.11  o.11  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.21  o.11  o.11  o..1  o..1
+o151  +1.1  o111  o221  +2.1  ...1  o121  o121  o121  o121  o121  o121  o111  o111  o1.1  o1.1
+o1.1  o111  o111  o121  o121  o122  o132  o132  o132  o132  o122  o121  o121  o111  o111  o1.1
+o111  o111  o121  o121  o132  o132  o132  o135  o135  o132  o132  o132  o121  o121  o111  o111
+o111  o121  o121  o132  o132  o145  o145  o145  o145  o145  o145  o132  o132  o121  o121  o111
+o121  o121  o132  o132  o145  o145  o145  o155  o155  o145  o145  o145  o132  o132  o121  o121
+o121  o122  o132  o145  o145  o155  o155  o155  o155  o155  o155  o145  o145  o132  o122  o121
+o121  o132  o132  o145  o145  o155  o165  o165  o165  o165  o155  o145  o145  o132  o132  o121
+o121  o132  o135  o145  o155  o155  o165  o175  o175  o165  o155  o155  o145  o135  o132  o121
+o121  o132  o135  o145  o155  o155  o165  o175  o175  o165  o155  o155  o145  o135  o132  o121
+o121  o132  o132  o145  o145  o155  o165  o165  o165  o165  o155  o145  o145  o132  o132  o121
+o121  o122  o132  o145  o145  o155  o155  o155  o155  o155  o155  o145  o145  o132  o122  o121
+o121  o121  o132  o132  o145  o145  o145  o155  o155  o145  o145  o145  o132  o132  o121  o121
+o111  o121  o121  o132  o132  o145  o145  o145  o145  o145  o145  o132  o132  o121  o121  o111
+o111  o111  o121  o121  o132  o132  o132  o135  o135  o132  o132  o132  o121  o121  o111  o111
+o1.1  o111  o111  o121  o121  o122  o132  o132  o132  o132  o122  o121  o121  o111  o111  o1.1
+o1.1  o1.1  o111  o111  o121  o121  o121  o121  o121  o121  o121  o121  o111  o111  o1.1  o1.1

@@ -2,13 +2,17 @@ from vonal import palette, render
 from vonal.cell import Cell, Form, Plate
 
 
-def test_extent_spans_eight_to_fifty_and_always_centres_on_an_integer():
+def test_extent_spans_eight_to_fiftyseven_and_never_reaches_a_corner():
+    # The top of the range is as close to filling the cell as the decoder
+    # allows, since it reads ground from the corner pixel. Odd lengths are
+    # fine: _box floors the offset, so the figure sits one pixel off centre
+    # and still clears both edges.
     assert render.extent(0) == 8
-    assert render.extent(7) == 50
+    assert render.extent(7) == 57
     for scale in range(8):
         length = render.extent(scale)
-        assert length % 2 == 0
-        assert (render.CELL - length) % 2 == 0
+        assert length < render.CELL - 2
+        assert (render.CELL - length) // 2 >= 1
 
 
 def test_every_glyph_leaves_ground_visible_at_all_four_corners_at_every_scale():
@@ -67,13 +71,14 @@ def test_render_produces_one_64px_block_per_cell():
 
 
 def test_render_uses_exactly_two_palette_colours_for_a_non_void_cell():
-    plate = Plate(1, 1, ((Cell(Form.DISC, variant=6, scale=4, ground=2),),))
+    plate = Plate(1, 1, ((Cell(Form.DISC, variant=7, scale=4, ground=2),),))
     image = render.render(plate)
-    assert {c for _, c in image.getcolors(maxcolors=100)} == {palette.rgb(6), palette.rgb(2)}
+    # variant 7 on ground 2 paints the figure in (2 + 7) % 8 = 1
+    assert {c for _, c in image.getcolors(maxcolors=100)} == {palette.rgb(1), palette.rgb(2)}
 
 
 def test_render_is_hard_edged():
     # Anti-aliasing would introduce colours outside the palette and break decoding.
-    plate = Plate(1, 1, ((Cell(Form.DISC, variant=6, scale=7, ground=2),),))
+    plate = Plate(1, 1, ((Cell(Form.DISC, variant=7, scale=7, ground=2),),))
     for _, colour in render.render(plate).getcolors(maxcolors=100):
         assert palette.index_of(colour) is not None

@@ -59,14 +59,29 @@ class Cell:
             # recover a non-zero value. The model must not admit one.
             if self.variant or self.scale:
                 raise ValueError("a void cell must have variant 0 and scale 0")
-        elif self.variant == self.ground:
-            raise ValueError(
-                "form colour equals ground colour; the cell would render as void"
-            )
+        elif not 1 <= self.variant <= 7:
+            # The variant is the figure colour's offset from the ground, so
+            # offset 0 would paint the figure in the ground's own colour and
+            # the cell would render as void. Excluding it is what makes
+            # "a figure never matches its ground" an identity rather than a
+            # rule, and leaves ground with no constraints at all.
+            raise ValueError(f"a non-void cell needs variant 1..7, got {self.variant}")
 
     @property
     def is_void(self) -> bool:
         return self.form is Form.VOID
+
+    @property
+    def figure(self) -> int:
+        """The palette index the glyph is painted in.
+
+        The variant is stored as an offset from the ground rather than as a
+        colour, so the same instruction can wear any of the eight colours
+        depending on what it sits on. Rotating a cell's figure and ground
+        together therefore leaves the program identical, which is what lets a
+        whole plate be recoloured without touching what it does.
+        """
+        return (self.ground + self.variant) % 8
 
 
 @dataclass(frozen=True)

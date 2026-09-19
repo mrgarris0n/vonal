@@ -50,9 +50,23 @@ visually free and removes every edge case.
 | Channel | Role |
 |---|---|
 | `form` | opcode family |
-| `form colour` | variant within the family |
+| `form colour` | variant within the family, as an **offset from the ground** |
 | `scale` | immediate value, `0–7` |
 | `ground colour` | **no semantics** — free for composition |
+
+The variant is not the figure's colour. It is `(figure − ground) mod 8`, so the
+colour drawn is `(ground + variant) mod 8`. Offset 0 would paint the figure in
+the ground's own colour and the cell would read as void, so variants run `1–7`
+and a figure can never match its ground. That is an identity, not a rule the
+model has to enforce, and it leaves ground with no constraints whatsoever.
+
+Two things follow, and they are why the indirection is worth it. **Rotating a
+cell's figure and ground together leaves the instruction unchanged**, so a whole
+plate can be recoloured without altering a thing it does. And all eight palette
+colours can be figures. Under the earlier absolute encoding the variant *was*
+the figure colour, which meant only the six colours some opcode happened to use
+could ever be drawn, every `push` was a black disc, and each cell forbade one
+ground.
 
 Freeing the ground colour is deliberate. It gives the artist an entire channel to
 key the plate with, so any colour scheme can host any program, and logic can be
@@ -118,13 +132,13 @@ it encodes comparison and needs no direction.
 | Form | Glyph | Family | Variants (form colour index) |
 |---|---|---|---|
 | void | `.` | HALT | — (variant ignored) |
-| disc | `o` | PUSH | `0` push `scale` · `1` pop `v`, push `v*8 + scale` |
-| square | `#` | ARITH | `0` add `1` sub `2` mul `3` div `4` mod `5` neg |
-| rhombus | `%` | STACK | `0` dup `1` pop `2` swap `3` over `4` roll |
-| triangle | `^ > v <` | TURN | `0` always · `1` if top ≠ 0 · `2` if top = 0 |
-| half-disc | `D` | COMPARE | `0` gt `1` lt `2` eq |
-| ring | `@` | FIELD | `0` get · `1` put |
-| cross | `+` | IO | `0` out num `1` out char `2` in num `3` in char |
+| disc | `o` | PUSH | `1` push `scale` · `2` pop `v`, push `v*8 + scale` |
+| square | `#` | ARITH | `1` add `2` sub `3` mul `4` div `5` mod `6` neg |
+| rhombus | `%` | STACK | `1` dup `2` pop `3` swap `4` over `5` roll |
+| triangle | `^ > v <` | TURN | `1` always · `2` if top ≠ 0 · `3` if top = 0 |
+| half-disc | `D` | COMPARE | `1` gt `2` lt `3` eq |
+| ring | `@` | FIELD | `1` get · `2` put |
+| cross | `+` | IO | `1` out num `2` out char `3` in num `4` in char |
 
 Any `(form, variant)` pair not listed is a **load error**, not a no-op (§7).
 
@@ -182,17 +196,16 @@ whitespace; rows by newlines.
 ```
 %plate 5x2
 
-o.57  +..7  ....  ....  ....
+o157  +1.7  ....  ....  ....
 ....  ....  ....  ....  ....
 ```
 
-That is: push 5, print it, halt. `o.57` is a disc, variant 0, scale 5, ground 7;
-`+..7` is a cross, variant 0 (out num), scale 0, ground 7.
+That is: push 5, print it, halt. `o157` is a disc, variant 1, scale 5, ground 7,
+drawn in colour `(7 + 1) mod 8 = 0`, black. `+1.7` is a cross, variant 1
+(out num), scale 0, ground 7.
 
-Both grounds are 7 rather than the default 0, and they have to be. A non-void
-cell's variant **is** its form colour, so `variant == ground` is invalid (§7) —
-the glyph would be invisible. Ground 7 is a convenient default for hand-written
-plates because no variant reaches 7, so it never collides.
+The grounds are free. Any value works here, 7 included, because no variant can
+collide with a ground: offset 0 is not a variant.
 
 **Canonical form: a dot means the channel is zero.** The parser accepts `0` and
 `.` interchangeably in the variant, scale and ground positions, but `emit`
@@ -259,8 +272,8 @@ would undermine the claim that the picture is the program.
 | `0` `#111111` | `1` `#F2F0E9` | `2` `#2B4EA2` | `3` `#4FA3D1` |
 | `4` `#1E9B6B` | `5` `#F2C230` | `6` `#D64530` | `7` `#7B4B9B` |
 
-**Geometry.** A form is inscribed in a square of side `L(s) = 8 + 6s` pixels,
-`s ∈ 0..7`, giving 8–50 px, centred in the 64 px cell at integer offset
+**Geometry.** A form is inscribed in a square of side `L(s) = 8 + 7s` pixels,
+`s ∈ 0..7`, giving 8–57 px, centred in the 64 px cell at floored offset
 `(64 - L)/2`. The bound matters: `L(7) = 50` leaves at least 7 px of ground on
 every side, so a non-void cell always shows exactly two colours. Ring thickness
 is `max(2, L//4)`; cross arm thickness is `max(2, L//3)`.

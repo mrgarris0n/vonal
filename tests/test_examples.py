@@ -1,12 +1,13 @@
 import hashlib
 import io
+import random
 from pathlib import Path
 
 import pytest
 from PIL import Image, ImageSequence
 
-from vonal import cli, decode, notation, render
-from vonal.cell import Cell
+from vonal import cli, decode, isa, notation, render
+from vonal.cell import Cell, Plate
 from vonal.machine import Machine
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
@@ -313,3 +314,98 @@ def test_the_shipped_bubble_gif_is_not_stale(tmp_path):
 
     assert summary(EXAMPLES / "bubble.gif") == summary(fresh)
     assert summary(fresh) == (37, BUBBLE_START, [0, 1, 2, 3, 4, 5, 6, 7])
+
+
+@pytest.mark.parametrize(
+    "name,stdin",
+    [("countdown.vsr", ""), ("hello.vsr", ""), ("mirror.vsr", ""),
+     ("bubble.vsr", ""), ("prime.vsr", "97\n"), ("span.vsr", "abc")],
+)
+def test_a_plate_can_be_recoloured_without_changing_what_it_does(name, stdin):
+    # The property the relative encoding exists for, and the reason the
+    # variant is an offset rather than a colour. Rotating a cell's ground
+    # carries its figure along, so the instruction is untouched. Every cell
+    # gets an independent random ground here, which under the old absolute
+    # encoding would have been illegal wherever the ground met the figure
+    # colour, and would have changed the opcode everywhere else.
+    base = notation.parse((EXAMPLES / name).read_text())
+    expected = output_of_plate(base, label=name, stdin=stdin)
+
+    rng = random.Random(1906)
+    recoloured = Plate(base.width, base.height, tuple(
+        tuple(
+            cell if cell.is_void
+            else Cell(cell.form, cell.variant, cell.scale, rng.randrange(8))
+            for cell in row
+        )
+        for row in base.cells
+    ))
+
+    isa.validate(recoloured)
+    assert output_of_plate(recoloured, label=name, stdin=stdin) == expected
+    assert decode.decode(render.render(recoloured)) == recoloured
+
+    grounds = {c.ground for row in recoloured.cells for c in row}
+    figures = {c.figure for row in recoloured.cells for c in row if not c.is_void}
+    assert len(grounds) == 8, "the recolouring did not exercise every ground"
+    assert len(figures) == 8, f"only {len(figures)} figure colours reachable"
+
+
+def _scale_total(plate):
+    return sum(cell.scale for row in plate.cells for cell in row)
+
+
+def test_folklore_prints_its_own_weight():
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    # Not a hardcoded 613: the number has to be the sum the plate actually
+    # carries, so regenerating the composition cannot leave the two disagreeing.
+    assert output_of("folklore.vsr") == f"{_scale_total(plate)}\n"
+
+
+def test_folklore_survives_a_full_image_round_trip():
+    assert round_trips("folklore.vsr")
+
+
+@pytest.mark.parametrize("x,y", [(6, 13), (3, 9), (11, 7), (23, 15), (1, 3)])
+def test_folklore_weighs_the_picture_rather_than_reciting_a_number(x, y):
+    # The claim is that it reads all 384 cells, its own loop included, so
+    # resizing any one of them must move the total by exactly that much.
+    # (1,3) is an instruction in the loop body, which is the interesting case:
+    # the program counts itself.
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    before = int(output_of_plate(plate, label="folklore"))
+    assert before == _scale_total(plate)
+
+    cell = plate.at(x, y)
+    assert not cell.is_void
+    changed = (cell.scale + 3) % 8
+    perturbed = plate.replaced(x, y, Cell(cell.form, cell.variant, changed, cell.ground))
+
+    after = int(output_of_plate(perturbed, label="folklore"))
+    assert after == before - cell.scale + changed
+
+
+def test_folklore_uses_every_colour_as_both_ground_and_figure():
+    # The reason this plate exists. Under the old absolute encoding it was
+    # impossible: the variant was the figure colour, so only the six colours
+    # some opcode used could be drawn, and every push disc was black.
+    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    grounds = {c.ground for row in plate.cells for c in row}
+    figures = {c.figure for row in plate.cells for c in row if not c.is_void}
+    assert grounds == set(range(8)), f"grounds {sorted(grounds)}"
+    assert figures == set(range(8)), f"figures {sorted(figures)}"
+
+
+def test_vega_no_longer_needs_a_ground_that_advertises_its_code():
+    # This plate used to carry a yellow strip over cells (2,0) to (4,0), and
+    # not for compositional reasons: under the absolute encoding those cells'
+    # variant matched the cream ground, which was forbidden, so they were
+    # forced onto a different one. With variants as offsets the collision
+    # cannot arise, so the program sits on the same ground as its neighbours.
+    plate = notation.parse((EXAMPLES / "vega.vsr").read_text())
+    field = plate.at(8, 0).ground                     # the outer band
+    assert [plate.at(x, 0).ground for x in range(6)] == [field] * 6
+
+    # And the rekeyed ground gives the figures somewhere to go.
+    figures = {c.figure for row in plate.cells for c in row if not c.is_void}
+    assert len(figures) > 1, "the swell is still monochrome"
