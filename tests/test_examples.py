@@ -394,3 +394,18 @@ def test_folklore_uses_every_colour_as_both_ground_and_figure():
     figures = {c.figure for row in plate.cells for c in row if not c.is_void}
     assert grounds == set(range(8)), f"grounds {sorted(grounds)}"
     assert figures == set(range(8)), f"figures {sorted(figures)}"
+
+
+def test_vega_no_longer_needs_a_ground_that_advertises_its_code():
+    # This plate used to carry a yellow strip over cells (2,0) to (4,0), and
+    # not for compositional reasons: under the absolute encoding those cells'
+    # variant matched the cream ground, which was forbidden, so they were
+    # forced onto a different one. With variants as offsets the collision
+    # cannot arise, so the program sits on the same ground as its neighbours.
+    plate = notation.parse((EXAMPLES / "vega.vsr").read_text())
+    field = plate.at(8, 0).ground                     # the outer band
+    assert [plate.at(x, 0).ground for x in range(6)] == [field] * 6
+
+    # And the rekeyed ground gives the figures somewhere to go.
+    figures = {c.figure for row in plate.cells for c in row if not c.is_void}
+    assert len(figures) > 1, "the swell is still monochrome"

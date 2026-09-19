@@ -105,11 +105,13 @@ Two channels are free, which is what lets code and picture coexist.
 the cell the eye stands on, and by a `get` aimed at that cell, so on every other
 cell it is free too.
 
-`examples/vega.vsr` uses this: three cells push 5 and print it, and the other
-253 are push instructions that never execute, their sizes a radial gradient that
-reads as a bulging sphere. The other plates do the same with whatever cells the
-eye never reaches. Void padding cannot carry a composition, since a void draws
-nothing and must have scale 0, so the padding is unreached push discs instead.
+`examples/vega.vsr` uses this: six cells push 5 and print it with a newline,
+and the other 250 are push instructions that never execute, their sizes a
+radial gradient that reads as a bulging sphere. Its ground is keyed in three
+concentric bands, and the figures follow them because the variant is an offset.
+The other plates do the same with whatever cells the eye never reaches. Void
+padding cannot carry a composition, since a void draws nothing and must have
+scale 0, so the padding is unreached push discs instead.
 
 `examples/kinetic.vsr` goes the other way and writes the field as it runs, so
 `vonal trace` on it produces frames that differ. `examples/kinetic.gif` is that
