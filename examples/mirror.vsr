@@ -13,9 +13,12 @@
 # are decoration or data depending only on whether anything looks at them.
 #
 # It is also the only self-reference the language allows. The field is built
-# from the scale channel alone, and no opcode exposes a cell's form or variant,
-# so a program can read its own data but never its own code. A quine is not
-# merely hard here, it is impossible.
+# from the scale channel alone, and no opcode exposes a cell's form, variant
+# or ground, so a program can read its own data but never its own code.
+#
+# That rules out introspection, not quines. A quine does not read itself, it
+# carries its own source as data: examples/quine.vsr prints its own text by
+# reading the scales it is stored in.
 #
 # Ends with a newline: push 1, push_acc 2 makes 10, then OUT_CHAR.
 %plate 15x13
