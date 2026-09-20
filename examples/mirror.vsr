@@ -7,7 +7,7 @@
 #
 #     1 2 3 4 5 5 6 7 6 5 5 4 3 2 1 
 #
-# This inverts what examples/vega.vsr claims. There the field is free precisely
+# This inverts what examples/orb.vsr claims. There the field is free precisely
 # because nothing reads it. Here a GET points at those same cells, so their
 # scales stop being composition and become the program's input. The same pixels
 # are decoration or data depending only on whether anything looks at them.

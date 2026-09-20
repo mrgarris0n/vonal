@@ -1,4 +1,4 @@
-"""The vasarely-8 palette. Colours are matched exactly, never approximately."""
+"""The vonal-8 palette. Colours are matched exactly, never approximately."""
 
 PALETTE: tuple[tuple[int, int, int], ...] = (
     (0x11, 0x11, 0x11),

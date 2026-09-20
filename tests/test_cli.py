@@ -85,7 +85,7 @@ def test_trace_gif_keeps_the_real_timing_despite_collapsing(tmp_path):
 
 def test_trace_gif_is_lossless_and_ends_on_the_finished_staircase(tmp_path):
     # GIF is paletted, so the risk is quantisation inventing a colour outside
-    # vasarely-8 and making the frames undecodable. Every frame must still be
+    # vonal-8 and making the frames undecodable. Every frame must still be
     # a legal plate, and the last must show the field the program drew.
     gif = tmp_path / "k.gif"
     main(["trace", str(KINETIC), str(gif)])

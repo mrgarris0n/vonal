@@ -32,7 +32,7 @@
 #
 # Row 6 prints the sorted row and row 5 adds the newline. Rows 1, 4 and the
 # unreached ends of the others are push discs whose sizes are a swell, as in
-# vega: instructions that never execute, carrying the composition.
+# orb: instructions that never execute, carrying the composition.
 %plate 24x8
 
 v1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5  o1.5

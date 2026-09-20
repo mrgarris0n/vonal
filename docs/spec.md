@@ -266,7 +266,7 @@ The image is therefore fully self-describing. Grid size is
 `width/64 × height/64`. No PNG metadata chunks — they strip on resave, which
 would undermine the claim that the picture is the program.
 
-**Palette `vasarely-8`:**
+**Palette `vonal-8`:**
 
 | | | | |
 |---|---|---|---|
@@ -323,7 +323,7 @@ compile's job.
 
 **Load** (PNG → program): image dimensions not a multiple of 64; more than
 65536 cells; a cell with more than two distinct colours; a colour outside
-`vasarely-8`; no matching `(form, scale)` template; an undefined
+`vonal-8`; no matching `(form, scale)` template; an undefined
 `(form, variant)` pair.
 
 The cell ceiling is 256×256, which is 16384 pixels square. It exists because a

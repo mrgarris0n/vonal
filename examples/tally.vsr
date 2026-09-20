@@ -1,6 +1,6 @@
-# folklore: a keyed grid that prints its own weight
+# tally: a keyed grid that prints its own weight
 #
-#     $ vonal run examples/folklore.vsr
+#     $ vonal run examples/tally.vsr
 #     613
 #
 # Every cell is its own figure and ground pair, in the idiom of Vasarely's
