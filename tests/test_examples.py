@@ -65,12 +65,12 @@ def test_collatz_survives_a_full_image_round_trip():
     assert round_trips("collatz.vsr")
 
 
-def test_vega_prints_five():
-    assert output_of("vega.vsr") == "5\n"
+def test_orb_prints_five():
+    assert output_of("orb.vsr") == "5\n"
 
 
-def test_vega_survives_a_full_image_round_trip():
-    assert round_trips("vega.vsr")
+def test_orb_survives_a_full_image_round_trip():
+    assert round_trips("orb.vsr")
 
 
 def test_hello_prints_hello_world():
@@ -220,12 +220,12 @@ def test_mirror_reads_the_picture_rather_than_reciting_it():
     assert after[1:] == before[1:], "perturbing one cell disturbed other columns"
 
 
-def test_vega_is_a_swell_and_not_a_flat_field():
+def test_orb_is_a_swell_and_not_a_flat_field():
     # This plate exists to demonstrate that scale is a free compositional
     # channel, so the gradient *is* the deliverable. A regeneration that
     # flattened it would still print "5" and still round-trip, and the two
     # tests above would both pass -- only this one would notice.
-    plate = notation.parse((EXAMPLES / "vega.vsr").read_text())
+    plate = notation.parse((EXAMPLES / "orb.vsr").read_text())
     scales = {
         plate.at(x, y).scale
         for y in range(plate.height)
@@ -415,25 +415,25 @@ def _scale_total(plate):
     return sum(cell.scale for row in plate.cells for cell in row)
 
 
-def test_folklore_prints_its_own_weight():
-    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+def test_tally_prints_its_own_weight():
+    plate = notation.parse((EXAMPLES / "tally.vsr").read_text())
     # Not a hardcoded 613: the number has to be the sum the plate actually
     # carries, so regenerating the composition cannot leave the two disagreeing.
-    assert output_of("folklore.vsr") == f"{_scale_total(plate)}\n"
+    assert output_of("tally.vsr") == f"{_scale_total(plate)}\n"
 
 
-def test_folklore_survives_a_full_image_round_trip():
-    assert round_trips("folklore.vsr")
+def test_tally_survives_a_full_image_round_trip():
+    assert round_trips("tally.vsr")
 
 
 @pytest.mark.parametrize("x,y", [(6, 13), (3, 9), (11, 7), (23, 15), (1, 3)])
-def test_folklore_weighs_the_picture_rather_than_reciting_a_number(x, y):
+def test_tally_weighs_the_picture_rather_than_reciting_a_number(x, y):
     # The claim is that it reads all 384 cells, its own loop included, so
     # resizing any one of them must move the total by exactly that much.
     # (1,3) is an instruction in the loop body, which is the interesting case:
     # the program counts itself.
-    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
-    before = int(output_of_plate(plate, label="folklore"))
+    plate = notation.parse((EXAMPLES / "tally.vsr").read_text())
+    before = int(output_of_plate(plate, label="tally"))
     assert before == _scale_total(plate)
 
     cell = plate.at(x, y)
@@ -441,28 +441,28 @@ def test_folklore_weighs_the_picture_rather_than_reciting_a_number(x, y):
     changed = (cell.scale + 3) % 8
     perturbed = plate.replaced(x, y, Cell(cell.form, cell.variant, changed, cell.ground))
 
-    after = int(output_of_plate(perturbed, label="folklore"))
+    after = int(output_of_plate(perturbed, label="tally"))
     assert after == before - cell.scale + changed
 
 
-def test_folklore_uses_every_colour_as_both_ground_and_figure():
+def test_tally_uses_every_colour_as_both_ground_and_figure():
     # The reason this plate exists. Under the old absolute encoding it was
     # impossible: the variant was the figure colour, so only the six colours
     # some opcode used could be drawn, and every push disc was black.
-    plate = notation.parse((EXAMPLES / "folklore.vsr").read_text())
+    plate = notation.parse((EXAMPLES / "tally.vsr").read_text())
     grounds = {c.ground for row in plate.cells for c in row}
     figures = {c.figure for row in plate.cells for c in row if not c.is_void}
     assert grounds == set(range(8)), f"grounds {sorted(grounds)}"
     assert figures == set(range(8)), f"figures {sorted(figures)}"
 
 
-def test_vega_no_longer_needs_a_ground_that_advertises_its_code():
+def test_orb_no_longer_needs_a_ground_that_advertises_its_code():
     # This plate used to carry a yellow strip over cells (2,0) to (4,0), and
     # not for compositional reasons: under the absolute encoding those cells'
     # variant matched the cream ground, which was forbidden, so they were
     # forced onto a different one. With variants as offsets the collision
     # cannot arise, so the program sits on the same ground as its neighbours.
-    plate = notation.parse((EXAMPLES / "vega.vsr").read_text())
+    plate = notation.parse((EXAMPLES / "orb.vsr").read_text())
     field = plate.at(8, 0).ground                     # the outer band
     assert [plate.at(x, 0).ground for x in range(6)] == [field] * 6
 

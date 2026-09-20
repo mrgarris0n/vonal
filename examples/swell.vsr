@@ -7,7 +7,7 @@
 # and writes a radial falloff into their scales, so the lattice swells into a
 # sphere while it runs. examples/swell.gif is that inflation.
 #
-# This inverts vega. There the swell is authored into the scales and the
+# This inverts orb. There the swell is authored into the scales and the
 # program ignores it. Here the swell is what the program computes, and the
 # picture that ships is the one from before the idea arrived.
 #

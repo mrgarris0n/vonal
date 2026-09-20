@@ -1,6 +1,6 @@
-# vega: a working program inside a Vasarely swell
+# orb: a working program inside a Vasarely swell
 #
-#     $ vonal run examples/vega.vsr
+#     $ vonal run examples/orb.vsr
 #     5
 #
 # The eye pushes 5, prints it, adds a newline, and halts on the void at (5,0).

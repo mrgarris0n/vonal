@@ -106,7 +106,7 @@ Two channels are free, which is what lets code and picture coexist.
 the cell the eye stands on, and by a `get` aimed at that cell, so on every other
 cell it is free too.
 
-`examples/vega.vsr` uses this: six cells push 5 and print it with a newline,
+`examples/orb.vsr` uses this: six cells push 5 and print it with a newline,
 and the other 250 are push instructions that never execute, their sizes a
 radial gradient that reads as a bulging sphere. Its ground is keyed in three
 concentric bands, and the figures follow them because the variant is an offset.
@@ -141,9 +141,9 @@ so a formula that cannot leave it is what lets the body run straight through
 without a single branch. Every square in the field is the same instruction,
 `add`. Only the ground alternates, and the figure alternates with it because
 the variant is an offset: one instruction, two colours. It is the inverse of
-`vega`, where the swell is authored and the program ignores it.
+`orb`, where the swell is authored and the program ignores it.
 
-`examples/folklore.vsr` is what the offset encoding buys. Every cell is its
+`examples/tally.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
 appear as grounds and all eight as figures. The figures follow the ground
 diagonally because the variant is an offset, and where they break the diagonal
@@ -195,7 +195,7 @@ the plate stops describing itself.
 | <img src="docs/previews/fibonacci.png" width="200" height="43" alt="fibonacci"> | `fibonacci` | first ten terms |
 | <img src="docs/previews/collatz.png" width="200" height="33" alt="collatz"> | `collatz` | trajectory of 6 |
 | <img src="docs/previews/collatz-in.png" width="200" height="33" alt="collatz-in"> | `collatz-in` | trajectory of whatever you pipe in |
-| <img src="docs/previews/vega.png" width="120" height="120" alt="vega"> | `vega` | `5`, inside a swell |
+| <img src="docs/previews/orb.png" width="120" height="120" alt="orb"> | `orb` | `5`, inside a swell |
 | <img src="docs/previews/hello.png" width="150" height="120" alt="hello"> | `hello` | `Hello, World!` |
 | <img src="docs/previews/kinetic.png" width="180" height="120" alt="kinetic"> | `kinetic` | nothing; it draws a staircase into its own field |
 | <img src="docs/previews/mirror.png" width="138" height="120" alt="mirror"> | `mirror` | the profile of its own swell, read back with `get` |
@@ -203,7 +203,7 @@ the plate stops describing itself.
 | <img src="docs/previews/span.png" width="200" height="27" alt="span"> | `span` | the largest of three piped-in characters, and its negation |
 | <img src="docs/previews/bubble.png" width="200" height="67" alt="bubble"> | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
 | <img src="docs/previews/swell.png" width="90" height="120" alt="swell"> | `swell` | nothing; it inflates its own flat lattice into a sphere |
-| <img src="docs/previews/folklore.png" width="180" height="120" alt="folklore"> | `folklore` | `613`, the total of its own glyph sizes |
+| <img src="docs/previews/tally.png" width="180" height="120" alt="tally"> | `tally` | `613`, the total of its own glyph sizes |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash
