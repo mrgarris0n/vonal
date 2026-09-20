@@ -82,9 +82,8 @@ and nothing else, so the entire remaining scale field is available for
 composition at zero cost to behaviour.
 
 This is what makes §2's Op-art goal reachable rather than aspirational: a smooth
-gradient of sizes across a body row, which is the *Vega* effect the language is
-named for, can be laid over working code without touching a single opcode,
-variant or literal.
+gradient of sizes across a body row, which is the *Vega* swell of §1, can be
+laid over working code without touching a single opcode, variant or literal.
 
 **The eye.** Position plus heading (N/E/S/W). It is the only locus of control.
 Execution begins at `(0,0)` heading east, by convention — no metadata is stored
