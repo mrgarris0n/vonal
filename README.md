@@ -218,4 +218,9 @@ rejected.
 
 ## Licence
 
-MIT. See `LICENSE`.
+MIT. See `LICENSE`. The plates are generated from the formulas in this
+repository, not derived from any particular artwork.
+
+Victor Vasarely's name appears here to say what the visual idiom is. This
+project is not affiliated with, endorsed by, or connected to the Vasarely
+estate or the Fondation Vasarely.
