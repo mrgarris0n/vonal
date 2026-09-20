@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Iterator
+from importlib.metadata import version
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -154,6 +155,11 @@ def _cmd_trace(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="vonal")
+    # Read from the installed metadata rather than a second literal here, so
+    # pyproject stays the one place the number lives. There is no path where
+    # this lookup fails: `vonal` is a console script, so reaching it at all
+    # means the distribution is installed.
+    parser.add_argument("--version", action="version", version=f"vonal {version('vonal')}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("compile", help="compile .vsr source to a plate image")
