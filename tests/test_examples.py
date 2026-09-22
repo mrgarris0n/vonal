@@ -666,3 +666,100 @@ def test_the_shipped_inversion_gif_is_not_stale():
     assert inversion_region(lambda x, y: last.at(x, y).scale) == [
         [7 - s for s in row] for row in shipped
     ]
+
+
+RIPPLE_TOP, RIPPLE_W, RIPPLE_H = 3, 19, 18
+RIPPLE_PASS = 10260  # 342 cells times a 30-step loop
+RIPPLE_CYCLE = [0, 2, 4, 6, 7, 5, 3, 1]
+
+
+def ripple_plate():
+    return notation.parse((EXAMPLES / "ripple.vsr").read_text())
+
+
+def ripple_region(scales_at):
+    return [[scales_at(x, y + RIPPLE_TOP) for x in range(RIPPLE_W)] for y in range(RIPPLE_H)]
+
+
+def ripple_step(region, table):
+    return [[table[s] for s in row] for row in region]
+
+
+def ripple_table(plate):
+    return [plate.at(s, 2).scale for s in range(8)]
+
+
+def test_ripple_prints_nothing_and_halts():
+    assert output_of("ripple.vsr") == ""
+
+
+def test_ripple_survives_a_full_image_round_trip():
+    assert round_trips("ripple.vsr")
+
+
+def test_the_ripple_table_steps_each_size_one_point_back_along_the_cycle():
+    # Back along the cycle is outward: a disc takes the size its inner
+    # neighbour had, so the rings travel away from the centre. And the cycle
+    # never repeats a size, which is why a size alone can say what comes next.
+    table = ripple_table(ripple_plate())
+    assert sorted(RIPPLE_CYCLE) == list(range(8))
+    assert all(table[RIPPLE_CYCLE[i]] == RIPPLE_CYCLE[i - 1] for i in range(8))
+
+
+def test_each_ripple_pass_moves_every_disc_one_step_and_lands_on_a_pass_boundary():
+    # What `--every 10260` relies on: at every multiple of the pass length the
+    # whole region is exactly one more step along, never half a sweep.
+    plate = ripple_plate()
+    table = ripple_table(plate)
+    expected = ripple_region(lambda x, y: plate.at(x, y).scale)
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    for n in range(1, 8):
+        machine.run(max_steps=n * RIPPLE_PASS)
+        expected = ripple_step(expected, table)
+        assert ripple_region(lambda x, y: machine.field[y][x]) == expected, f"pass {n}"
+    machine.run()
+    assert machine.halted and n == 7
+
+
+def test_ripple_ends_one_step_short_of_where_it_began():
+    # Seven passes of an eight-point cycle: one more step would restore the
+    # shipped picture, which is what makes the animation loop without a seam.
+    plate = ripple_plate()
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=100_000)
+    final = ripple_region(lambda x, y: machine.field[y][x])
+    assert ripple_step(final, ripple_table(plate)) == ripple_region(lambda x, y: plate.at(x, y).scale)
+
+
+def test_ripple_reads_its_step_from_the_picture_rather_than_reciting_it():
+    # Write the cycle run forward into the table and the rings must fall
+    # inward instead, which they can only do if the loop reads those discs.
+    base = ripple_plate()
+    forward = {RIPPLE_CYCLE[i]: RIPPLE_CYCLE[(i + 1) % 8] for i in range(8)}
+    rows = [list(row) for row in base.cells]
+    for s in range(8):
+        cell = rows[2][s]
+        rows[2][s] = Cell(cell.form, cell.variant, forward[s], cell.ground)
+    plate = Plate(base.width, base.height, tuple(tuple(r) for r in rows))
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=RIPPLE_PASS)
+    shipped = ripple_region(lambda x, y: base.at(x, y).scale)
+    assert ripple_region(lambda x, y: machine.field[y][x]) == ripple_step(shipped, forward)
+
+
+def test_the_shipped_ripple_gif_is_not_stale(tmp_path):
+    # Cheap to re-trace: --every renders only once a pass.
+    fresh = tmp_path / "fresh.gif"
+    assert cli.main([
+        "trace", str(EXAMPLES / "ripple.vsr"), str(fresh),
+        "--max-steps", "72000", "--every", str(RIPPLE_PASS), "--frame-ms", "120",
+    ]) == 0
+
+    def frames(path):
+        with Image.open(path) as im:
+            return [f.convert("RGB").tobytes() for f in ImageSequence.Iterator(im)]
+
+    shipped = frames(EXAMPLES / "ripple.gif")
+    assert shipped == frames(fresh)
+    # One frame per pass boundary, the start included, all different.
+    assert len(shipped) == len(set(shipped)) == 8

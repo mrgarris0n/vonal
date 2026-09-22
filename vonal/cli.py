@@ -76,33 +76,40 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
-def _trace_frames(machine: Machine, max_steps: int) -> Iterator[Image.Image]:
-    """The plate as rendered before each step, until it halts or hits the cap.
+def _trace_frames(machine: Machine, max_steps: int, every: int = 1) -> Iterator[Image.Image]:
+    """The plate as rendered before every `every`-th step, until it halts or hits the cap.
 
     Only a `put` changes the picture, and it changes one cell, so each frame
     repaints just the cells whose field value moved since the last one rather
     than rendering the whole plate again. A changed frame is a fresh copy and
     an unchanged one is the previous object again, so a consumer may keep any
     frame it is handed without it being drawn over later.
+
+    The state the machine stops in is always a frame, whatever the stride, so
+    a sampled trace still ends on the finished picture. When the eye stands on
+    a void, the next step halts and cannot change anything, so that is the
+    moment to take it.
     """
     plate = machine.plate
     frame = render.render(plate)
     shown = [row[:] for row in machine.field]
     while True:
-        changed = [
-            (x, y, value)
-            for y, row in enumerate(machine.field)
-            if row != shown[y]
-            for x, value in enumerate(row)
-            if value != shown[y][x] and not plate.at(x, y).is_void
-        ]
-        if changed:
-            frame = frame.copy()
-            for x, y, value in changed:
-                cell = plate.at(x, y)
-                render.paint(frame, x, y, Cell(cell.form, cell.variant, value, cell.ground))
-                shown[y][x] = value
-        yield frame
+        final = machine.steps >= max_steps or plate.at(machine.x, machine.y).is_void
+        if final or machine.steps % every == 0:
+            changed = [
+                (x, y, value)
+                for y, row in enumerate(machine.field)
+                if row != shown[y]
+                for x, value in enumerate(row)
+                if value != shown[y][x] and not plate.at(x, y).is_void
+            ]
+            if changed:
+                frame = frame.copy()
+                for x, y, value in changed:
+                    cell = plate.at(x, y)
+                    render.paint(frame, x, y, Cell(cell.form, cell.variant, value, cell.ground))
+                    shown[y][x] = value
+            yield frame
         if machine.steps >= max_steps or not machine.step():
             return
 
@@ -145,13 +152,15 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
 
 
 def _cmd_trace(args: argparse.Namespace) -> int:
+    if args.every < 1:
+        raise VonalError(f"--every must be at least 1, got {args.every}")
     machine = Machine(_load(Path(args.plate)))
     out = Path(args.out)
-    frames = _trace_frames(machine, args.max_steps)
+    frames = _trace_frames(machine, args.max_steps, args.every)
     if out.suffix.lower() == ".gif":
         _save_gif(frames, out, args.frame_ms)
     else:
-        # A directory keeps one PNG per step, numbered, for stepping through by
+        # A directory keeps one PNG per frame, numbered, for stepping through by
         # hand. No collapsing here: a step that changes nothing is still a step.
         out.mkdir(parents=True, exist_ok=True)
         for n, frame in enumerate(frames):
@@ -187,13 +196,16 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser(
         "trace",
-        help="write one frame per step: a directory of PNGs, or an animated .gif",
+        help="write one frame per step (or per --every N): a directory of PNGs, or an animated .gif",
     )
     p.add_argument("plate")
     p.add_argument("out", help="a directory, or a path ending .gif to animate")
     p.add_argument("--max-steps", type=int, default=1000)
     p.add_argument(
-        "--frame-ms", type=int, default=100, help="milliseconds per step in a .gif"
+        "--every", type=int, default=1, help="keep one frame every N steps, plus the last"
+    )
+    p.add_argument(
+        "--frame-ms", type=int, default=100, help="milliseconds per frame in a .gif"
     )
     p.set_defaults(func=_cmd_trace)
 

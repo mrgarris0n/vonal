@@ -36,6 +36,7 @@ vonal disassemble in.png [out.vsr]    # image back to text
 vonal run         plate [--max-steps N]   # accepts .vsr or .png
 vonal trace       plate outdir/       # one PNG frame per step
 vonal trace       plate anim.gif     # or an animated GIF (--frame-ms N)
+vonal trace       plate anim.gif --every N   # one frame every N steps, plus the last
 vonal --version                       # the installed version
 ```
 
@@ -163,6 +164,19 @@ sizes with its centre already inverted. The program reads each size with
 rim; retracing it wants `--max-steps 8100`. No colour changes anywhere, and no
 opcode can change one.
 
+`examples/ripple.vsr` moves its rings outward. Round rings would need a
+square root, which the language does not have, so they are authored, and only
+the step is computed: every disc sits at one of eight points in the cycle
+`0 2 4 6 7 5 3 1`, and each pass moves every disc one point along it. The cycle
+rises through the evens and falls through the odds, so no size repeats and a
+disc's size alone says where it is in the wave. The step is a lookup table,
+and the table is eight discs in row 2 that the program reads with `get`:
+reshape them and the wave changes, and write the cycle run forward there
+(`2 0 4 1 6 3 7 5`) and the ripples fall inward. Every pass is exactly 10260
+steps, so `examples/ripple.gif` is traced with `--every 10260`, one frame per
+finished pass; seven passes leave it one step short of where it began, so the
+animation loops without a seam.
+
 `examples/tally.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
 appear as grounds and all eight as figures. The figures follow the ground
@@ -226,6 +240,7 @@ the plate stops describing itself.
 | <img src="docs/previews/tally.png" width="180" height="120" alt="tally"> | `tally` | `613`, the total of its own glyph sizes |
 | <img src="docs/previews/vortex.png" width="120" height="120" alt="vortex"> | `vortex` | `vortex`, while the eye runs every cell once |
 | <img src="docs/previews/inversion.png" width="102" height="120" alt="inversion"> | `inversion` | nothing; it turns its own bulge inside out |
+| <img src="docs/previews/ripple.png" width="109" height="120" alt="ripple"> | `ripple` | nothing; its rings travel outward, one step per pass |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash
