@@ -7,6 +7,8 @@ here, so the two cannot drift apart.
 
 from __future__ import annotations
 
+import functools
+
 from PIL import Image, ImageDraw
 
 from vonal import palette
@@ -76,6 +78,7 @@ def _draw(draw: ImageDraw.ImageDraw, form: Form, scale: int) -> None:
         raise ValueError(f"{form} has no glyph")
 
 
+@functools.cache
 def template(form: Form, scale: int) -> bytes:
     """A CELL*CELL mask: GROUND where the ground shows, FORM where the glyph does."""
     image = Image.new("L", (CELL, CELL), GROUND)
@@ -111,10 +114,15 @@ def _cell_image(cell: Cell) -> Image.Image:
     return block
 
 
+def paint(image: Image.Image, x: int, y: int, cell: Cell) -> None:
+    """Draw one cell into a rendered plate, in place."""
+    image.paste(_cell_image(cell), (x * CELL, y * CELL))
+
+
 def render(plate: Plate) -> Image.Image:
     """Render a Plate as a hard-edged RGB image."""
     image = Image.new("RGB", (plate.width * CELL, plate.height * CELL))
     for y, row in enumerate(plate.cells):
         for x, cell in enumerate(row):
-            image.paste(_cell_image(cell), (x * CELL, y * CELL))
+            paint(image, x, y, cell)
     return image

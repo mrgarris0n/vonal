@@ -260,3 +260,25 @@ def test_trace_skips_void_cells_when_field_is_modified(tmp_path):
     assert main(["trace", str(src), str(out)]) == 0
     # 5 frames: initial, then one after each step (push 3, push 0, push 1, PUT, halt).
     assert len(sorted(out.glob("*.png"))) == 5
+
+
+def test_each_trace_frame_is_the_plate_rendered_with_the_current_field(tmp_path):
+    # Trace repaints only the cells a put changed. Every frame must still be
+    # exactly what rendering the whole plate from the field at that step gives.
+    from vonal.cell import Cell
+    from vonal.cli import _trace_frames
+    from vonal.machine import Machine
+
+    source = Path(__file__).resolve().parent.parent / "examples" / "kinetic.vsr"
+    plate = notation.parse(source.read_text())
+    machine = Machine(plate)
+    for frame in _trace_frames(machine, 200):
+        rows = tuple(
+            tuple(
+                cell if cell.is_void else Cell(cell.form, cell.variant, value, cell.ground)
+                for cell, value in zip(row, field_row)
+            )
+            for row, field_row in zip(plate.cells, machine.field)
+        )
+        expected = render.render(type(plate)(plate.width, plate.height, rows))
+        assert frame.tobytes() == expected.tobytes(), f"step {machine.steps}"

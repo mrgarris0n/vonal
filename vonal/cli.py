@@ -25,19 +25,6 @@ def _load(path: Path) -> Plate:
     return decode.load(path)
 
 
-def _with_field(plate: Plate, field: list[list[int]]) -> Plate:
-    """The plate as the running machine has deformed it."""
-    current = plate
-    for y, row in enumerate(field):
-        for x, value in enumerate(row):
-            cell = current.at(x, y)
-            if cell.scale != value and not cell.is_void:
-                current = current.replaced(
-                    x, y, Cell(cell.form, cell.variant, value, cell.ground)
-                )
-    return current
-
-
 def _cmd_compile(args: argparse.Namespace) -> int:
     out = Path(args.out)
     if out.suffix.lower() != ".png":
@@ -90,9 +77,32 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 
 def _trace_frames(machine: Machine, max_steps: int) -> Iterator[Image.Image]:
-    """The plate as rendered before each step, until it halts or hits the cap."""
+    """The plate as rendered before each step, until it halts or hits the cap.
+
+    Only a `put` changes the picture, and it changes one cell, so each frame
+    repaints just the cells whose field value moved since the last one rather
+    than rendering the whole plate again. A changed frame is a fresh copy and
+    an unchanged one is the previous object again, so a consumer may keep any
+    frame it is handed without it being drawn over later.
+    """
+    plate = machine.plate
+    frame = render.render(plate)
+    shown = [row[:] for row in machine.field]
     while True:
-        yield render.render(_with_field(machine.plate, machine.field))
+        changed = [
+            (x, y, value)
+            for y, row in enumerate(machine.field)
+            if row != shown[y]
+            for x, value in enumerate(row)
+            if value != shown[y][x] and not plate.at(x, y).is_void
+        ]
+        if changed:
+            frame = frame.copy()
+            for x, y, value in changed:
+                cell = plate.at(x, y)
+                render.paint(frame, x, y, Cell(cell.form, cell.variant, value, cell.ground))
+                shown[y][x] = value
+        yield frame
         if machine.steps >= max_steps or not machine.step():
             return
 
@@ -110,15 +120,13 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
     """
     kept: list[Image.Image] = []
     holds: list[int] = []
-    previous: bytes | None = None
     for frame in frames:
-        raw = frame.tobytes()
-        if raw == previous:
+        # _trace_frames hands back the same object when nothing was repainted.
+        if kept and frame is kept[-1]:
             holds[-1] += 1
         else:
             kept.append(frame)
             holds.append(1)
-            previous = raw
 
     # A plate uses at most the 8 palette colours, so an adaptive 8-colour
     # palette is exact. Dithering would invent colours the palette does not
