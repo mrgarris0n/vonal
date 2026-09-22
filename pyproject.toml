@@ -32,3 +32,6 @@ select = ["E", "F", "W", "I", "B", "UP", "C4", "RUF"]
 # tests are not: pytest functions gain nothing from annotations.
 strict = true
 files = ["vonal", "tools"]
+# The oldest Python the package supports, so the check does not accept
+# anything newer than that, whatever interpreter it runs on.
+python_version = "3.11"

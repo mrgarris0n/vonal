@@ -111,7 +111,8 @@ class Machine:
         if op is Op.TURN_UNLESS and self._pop(x, y) != 0:
             return
         heading = cell.form.heading
-        assert heading is not None, "isa maps the turns to triangles only"
+        if heading is None:
+            raise AssertionError("isa maps the turns to triangles only")
         self.heading = heading
 
     def _arith(self, op: Op, x: int, y: int) -> None:
