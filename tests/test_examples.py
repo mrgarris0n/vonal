@@ -537,3 +537,97 @@ def test_a_cell_inside_the_encoded_region_is_load_bearing_twice():
     assert printed != notation.emit(perturbed)
     moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
     assert len(moved) > 1, "a data cell should disturb more than its own token"
+
+
+def test_vortex_prints_its_name():
+    assert output_of("vortex.vsr") == "vortex\n"
+
+
+def test_vortex_survives_a_full_image_round_trip():
+    assert round_trips("vortex.vsr")
+
+
+def test_the_vortex_eye_runs_every_cell_exactly_once():
+    # The plate's whole claim: no cell is decoration the eye never reaches.
+    # Visiting a cell twice would mean the spiral loops; missing one would
+    # mean some of the picture is not route.
+    plate = notation.parse((EXAMPLES / "vortex.vsr").read_text())
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    visits = []
+    while not machine.halted:
+        visits.append((machine.x, machine.y))
+        machine.step()
+    assert sorted(visits) == [(x, y) for x in range(15) for y in range(15)]
+    assert visits[-1] == (7, 7) and plate.at(7, 7).is_void
+
+
+def test_vortex_can_be_recoloured_without_changing_what_it_does():
+    # Its colours are all ground: every turn shares offset 1. Scatter the
+    # grounds and the route and the output must not move.
+    base = notation.parse((EXAMPLES / "vortex.vsr").read_text())
+    rng = random.Random(1906)
+    recoloured = Plate(base.width, base.height, tuple(
+        tuple(cell if cell.is_void else Cell(cell.form, cell.variant, cell.scale, rng.randrange(8))
+              for cell in row)
+        for row in base.cells
+    ))
+    assert output_of_plate(recoloured, label="vortex") == "vortex\n"
+
+
+INVERSION_TOP = 3  # rows 0-1 are the program, row 2 holds the exit
+
+
+def inversion_region(scales_at):
+    return [[scales_at(x, y + INVERSION_TOP) for x in range(16)] for y in range(16)]
+
+
+INVERSION_EXPECTED = [[(x + y) // 4 for x in range(16)] for y in range(16)]
+
+
+def test_the_inversion_gradient_uses_the_whole_range_and_no_more():
+    # Why the loop needs no clamp: PUT faults outside 0-7, and 30 // 4 == 7.
+    values = [v for row in INVERSION_EXPECTED for v in row]
+    assert (min(values), max(values)) == (0, 7)
+
+
+def test_every_inversion_square_is_drawn_in_its_neighbours_ground():
+    # The property offset 4 buys and no other offset has: growing a square
+    # swaps its cell into its neighbour's colours rather than a third one.
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    for y in range(INVERSION_TOP, plate.height):
+        for x in range(16):
+            cell = plate.at(x, y)
+            assert (cell.form, cell.variant) == (Form.SQUARE, 4)
+            neighbours = [plate.at(nx, ny) for nx, ny in ((x + 1, y), (x, y + 1))
+                          if nx < 16 and ny < plate.height]
+            assert all(cell.figure == n.ground for n in neighbours)
+
+
+def test_inversion_ships_flat_and_computes_its_own_gradient():
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    assert inversion_region(lambda x, y: plate.at(x, y).scale) == [[0] * 16] * 16
+
+    out = io.StringIO()
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
+    machine.run(max_steps=7000)
+
+    assert machine.halted and out.getvalue() == ""
+    assert inversion_region(lambda x, y: machine.field[y][x]) == INVERSION_EXPECTED
+
+
+def test_inversion_survives_a_full_image_round_trip():
+    assert round_trips("inversion.vsr")
+
+
+def test_the_shipped_inversion_gif_is_not_stale():
+    # Checked from its frames rather than re-traced, as swell's is: the plate
+    # runs 6659 steps, and the claim lives in the first and last frame.
+    with Image.open(EXAMPLES / "inversion.gif") as image:
+        frames = [frame.convert("RGB") for frame in ImageSequence.Iterator(image)]
+
+    # 247, not 257: the 10 cells with x + y < 4 are written the size they
+    # already ship at, and a write that changes no pixel is collapsed away.
+    assert len(frames) == 247
+    first, last = decode.decode(frames[0]), decode.decode(frames[-1])
+    assert inversion_region(lambda x, y: first.at(x, y).scale) == [[0] * 16] * 16
+    assert inversion_region(lambda x, y: last.at(x, y).scale) == INVERSION_EXPECTED

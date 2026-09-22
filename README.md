@@ -114,6 +114,15 @@ The other plates do the same with whatever cells the eye never reaches. Void
 padding cannot carry a composition, since a void draws nothing and must have
 scale 0, so the padding is unreached push discs instead.
 
+`examples/vortex.vsr` has no unreached cells at all. It is a square spiral of
+triangles, and the eye runs every one of its 225 cells exactly once before
+halting on the void at the centre, so the picture is a diagram of its own
+route. Most of the triangles do nothing: a turn that restates the heading the
+eye already has is a no-op, so a side of a ring can be all triangles and still
+be a straight run, and only the corners and a seam down the diagonal actually
+turn. The first few cells of each ring are discs and a cross instead, and
+between them the seven rings print `vortex`.
+
 `examples/kinetic.vsr` goes the other way and writes the field as it runs, so
 `vonal trace` on it produces frames that differ. `examples/kinetic.gif` is that
 trace animated: runs of identical frames are collapsed into one held
@@ -142,6 +151,16 @@ without a single branch. Every square in the field is the same instruction,
 `add`. Only the ground alternates, and the figure alternates with it because
 the variant is an offset: one instruction, two colours. It is the inverse of
 `orb`, where the swell is authored and the program ignores it.
+
+`examples/inversion.vsr` is a chequer that turns itself inside out by
+resizing. Every square is `div`, variant 4, on alternating blue and red
+grounds, and offset 4 is the one that makes each square's figure exactly its
+neighbours' ground: `2 + 4 = 6` and `6 + 4 = 2`. At size 0 the chequer reads
+blue and red, and at size 7 each square nearly fills its cell and it reads red
+and blue. The program writes the gradient `(x + y) / 4` into the field, so
+`examples/inversion.gif` shows one corner inverting and the other staying
+put; retracing it wants `--max-steps 7000`. No colour changes anywhere, and
+no opcode can change one.
 
 `examples/tally.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
@@ -204,6 +223,8 @@ the plate stops describing itself.
 | <img src="docs/previews/bubble.png" width="200" height="67" alt="bubble"> | `bubble` | `0 1 2 3 4 5 6 7`, sorted out of its own picture |
 | <img src="docs/previews/swell.png" width="90" height="120" alt="swell"> | `swell` | nothing; it inflates its own flat lattice into a sphere |
 | <img src="docs/previews/tally.png" width="180" height="120" alt="tally"> | `tally` | `613`, the total of its own glyph sizes |
+| <img src="docs/previews/vortex.png" width="120" height="120" alt="vortex"> | `vortex` | `vortex`, while the eye runs every cell once |
+| <img src="docs/previews/inversion.png" width="101" height="120" alt="inversion"> | `inversion` | nothing; it inverts its own chequer by resizing it |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash

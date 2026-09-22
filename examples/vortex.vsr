@@ -1,0 +1,47 @@
+# vortex: the ornament is the route
+#
+#     $ vonal run examples/vortex.vsr
+#     vortex
+#
+# Every other plate decorates with cells the eye never reaches. Here there are
+# none: the eye starts at (0,0), runs every one of the 225 cells exactly once,
+# and halts on the void at the centre. The picture is a diagram of its own
+# control flow.
+#
+# The route is a square spiral. Each ring is walked clockwise, and one step
+# short of closing it, the triangle at (k, k+1) points east instead of north,
+# which drops the eye onto the next ring in. Those seven cells are the seam
+# running down the diagonal from the top left.
+#
+# Most of the triangles do nothing. A turn that restates the heading the eye
+# already has costs a step and changes nothing, so a whole side of a ring can
+# be triangles and still be a straight run. Only the corners and the seam
+# actually turn. That is also why a cell on a straight run is free to be any
+# instruction that does not turn: the first few on each ring are discs and a
+# cross that spell one character in base 8 and print it, so the seven rings
+# print the plate's own name, outermost first.
+#
+# Every turn is variant 1, the unconditional one. Variants 2 and 3 would pop
+# the stack, which is empty, so the triangles share one figure offset, and
+# the colour comes from the ground instead: one band per ring, the figures
+# following it. The triangles shrink toward the centre (scale 7 - ring),
+# which is free because a turn never reads its scale. So is the cross's.
+# The discs' sizes are the digits.
+
+%plate 15x15
+
+o11.  o26.  o26.  +27.  >17.  >17.  >17.  >17.  >17.  >17.  >17.  >17.  >17.  >17.  v17.
+>17.  o117  o257  o277  +267  >167  >167  >167  >167  >167  >167  >167  >167  v167  v17.
+^17.  >167  o112  o262  o222  +252  >152  >152  >152  >152  >152  >152  v152  v167  v17.
+^17.  ^167  >152  o113  o263  o243  +243  >143  >143  >143  >143  v143  v152  v167  v17.
+^17.  ^167  ^152  >143  o114  o244  o254  +234  >134  >134  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  >134  o115  o275  o2.5  +225  v125  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  ^134  >125  o116  o226  v116  v125  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  ^134  ^125  >116  ....  +216  v125  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  ^134  ^125  ^116  <116  <116  v125  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  ^134  ^125  <125  <125  <125  <125  v134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  ^134  <134  <134  <134  <134  <134  <134  v143  v152  v167  v17.
+^17.  ^167  ^152  ^143  <143  <143  <143  <143  <143  <143  <143  <143  v152  v167  v17.
+^17.  ^167  ^152  <152  <152  <152  <152  <152  <152  <152  <152  <152  <152  v167  v17.
+^17.  ^167  <167  <167  <167  <167  <167  <167  <167  <167  <167  <167  <167  <167  v17.
+^17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.  <17.

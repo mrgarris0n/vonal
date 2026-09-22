@@ -1,0 +1,49 @@
+# inversion: a chequer that turns itself inside out by resizing
+#
+#     $ vonal trace examples/inversion.vsr inversion.gif --max-steps 7000
+#
+# Rows 3 to 18 are a blue and red chequer of squares, every one of them the
+# same instruction, `div`, and every one shipped at size 0. The program
+# writes a diagonal gradient into their scales, (x + y) / 4, and prints
+# nothing. Where it writes 0 the chequer reads as blue and red; where it
+# writes 7 each square all but fills its cell, and the chequer reads as red
+# and blue. The same squares, in the same colours, inverted by size alone.
+#
+# That works for one offset only. The figure is (ground + variant) mod 8, and
+# div is variant 4, so on ground 2 (blue) it paints 6 (red) and on ground 6 it
+# paints 10 mod 8 = 2. Each square is drawn in exactly its neighbours' ground
+# colour, so growing it swaps the pair. At any other offset the figure is a
+# third colour and nothing inverts. It also means the photographic negative
+# of the chequer, figure and ground exchanged in every square, is the same
+# chequer of divs: 8 - 4 = 4 is the only variant that is its own negation.
+#
+# The loop is swell's: one counter j, x = j mod 16 and y = j / 16, with
+# push 3 / roll rotating [x, y, s] into [s, x, y], the order PUT pops them
+# in. j counts down from 255 so the exit test is a bare `turn unless` on a
+# copy of it, which is why the chequer fills from the bottom right. The
+# gradient needs no clamp: x + y is at most 30 and 30 / 4 is 7, so every
+# value lands in the range PUT accepts. Rows 0 and 1 hold the seed and the
+# loop, the void in row 2 is the exit, and the chequer's ground runs under the
+# program too.
+
+%plate 16x19
+
+o142  o2.6  o2.2  >1.6  o112  #2.6  %1.2  o126  o2.2  #5.6  %4.2  o126  o2.2  #4.6  %4.2  v1.6
+#4.6  #4.2  #4.6  ^1.2  v3.6  %1.2  @2.6  #1.2  o136  %5.2  o136  #4.2  o146  #1.2  %4.6  <1.2
+#4.2  #4.6  #4.2  #4.6  ...2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
