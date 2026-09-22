@@ -1,0 +1,58 @@
+# ripple: rings that travel outward, one step per pass
+#
+#     $ vonal trace examples/ripple.vsr ripple.gif --max-steps 72000 --every 10260
+#
+# Rows 3 to 20 are concentric rings of discs, drawn as a wave of sizes: every
+# disc sits at one of eight points in the cycle 0 2 4 6 7 5 3 1, according
+# to its distance from the centre. The program visits every disc once per
+# pass and moves it one point along the cycle, which moves every ring one
+# eighth of a wavelength outward. It makes seven passes, so the last picture
+# is one step short of the first and ripple.gif loops without a seam.
+#
+# The program never computes a distance. Round rings would need a square
+# root, which this language does not have, so the rings are authored and
+# only the step is computed: a disc's next size depends on nothing but its
+# current one. That rule is a table, and the table is in the picture: the
+# eight discs at the start of row 2 hold next(s) at column s, and the loop
+# reads them with get. Reshape those eight discs and the wave changes shape
+# or direction. Write 2 0 4 1 6 3 7 5 there, the cycle run forward, and the
+# ripples fall inward instead.
+#
+# A cycle rather than a formula: a smooth wave rises and falls, so it visits
+# most sizes twice, and a disc's size would not say whether it is on the way
+# up or down. 0 2 4 6 7 5 3 1 rises through the evens and falls through the
+# odds, so no size repeats and the size alone is the phase.
+#
+# One counter n addresses every disc. x = n mod 19 and y = n mod 18 + 3, and
+# because 19 and 18 share no factor, any 342 consecutive values of n visit all
+# 342 cells exactly once, which is cheaper than splitting n into a row and a
+# column. n counts down from 2394, seven passes, so the exit test is a bare
+# `turn unless` on a copy of it, and the void below it in row 2 is the exit.
+#
+# Every pass is exactly 10260 steps, 342 cells times a 30-step loop, and the
+# loop has no branch but the exit. That is what --every 10260 relies on: one
+# frame per completed pass, never one caught halfway through a sweep.
+
+%plate 19x21
+
+o147  o257  o237  o227  >1.7  o117  #2.7  %1.7  o127  o237  #5.7  %4.7  o127  o227  #5.7  o137  #1.7  %4.7  v1.7
+o1.7  o1.7  o1.7  o1.7  ^1.7  <1.7  <1.7  <1.7  <1.7  v3.7  %1.7  @2.7  %5.7  o137  @1.7  o127  @1.7  %4.7  <1.7
+o117  o137  o1.7  o157  o127  o177  o147  o167  o1.7  ...7  o1.7  o1.7  o1.7  o1.7  o1.7  o1.7  o1.7  o1.7  o1.7
+o167  o147  o127  o1.7  o117  o117  o137  o157  o157  o157  o157  o157  o137  o117  o117  o1.7  o127  o147  o167
+o147  o127  o1.7  o117  o137  o157  o177  o177  o177  o177  o177  o177  o177  o157  o137  o117  o1.7  o127  o147
+o127  o1.7  o117  o137  o157  o177  o167  o147  o147  o147  o147  o147  o167  o177  o157  o137  o117  o1.7  o127
+o1.7  o117  o137  o157  o167  o147  o147  o122  o1.2  o1.2  o1.2  o122  o147  o147  o167  o157  o137  o117  o1.7
+o1.7  o137  o157  o177  o147  o127  o1.2  o112  o112  o112  o112  o112  o1.2  o127  o147  o177  o157  o137  o1.7
+o117  o157  o177  o167  o127  o1.2  o112  o132  o152  o152  o152  o132  o112  o1.2  o127  o167  o177  o157  o117
+o137  o157  o167  o147  o1.2  o112  o132  o152  o172  o172  o172  o152  o132  o112  o1.2  o147  o167  o157  o137
+o137  o157  o167  o127  o1.2  o132  o152  o172  o142  o142  o142  o172  o152  o132  o1.2  o127  o167  o157  o137
+o137  o177  o167  o127  o1.2  o132  o172  o162  o122  o1.2  o122  o162  o172  o132  o1.2  o127  o167  o177  o137
+o137  o177  o167  o127  o1.2  o132  o172  o162  o122  o1.2  o122  o162  o172  o132  o1.2  o127  o167  o177  o137
+o137  o157  o167  o127  o1.2  o132  o152  o172  o142  o142  o142  o172  o152  o132  o1.2  o127  o167  o157  o137
+o137  o157  o167  o147  o1.2  o112  o132  o152  o172  o172  o172  o152  o132  o112  o1.2  o147  o167  o157  o137
+o117  o157  o177  o167  o127  o1.2  o112  o132  o152  o152  o152  o132  o112  o1.2  o127  o167  o177  o157  o117
+o1.7  o137  o157  o177  o147  o127  o1.2  o112  o112  o112  o112  o112  o1.2  o127  o147  o177  o157  o137  o1.7
+o1.7  o117  o137  o157  o167  o147  o147  o122  o1.2  o1.2  o1.2  o122  o147  o147  o167  o157  o137  o117  o1.7
+o127  o1.7  o117  o137  o157  o177  o167  o147  o147  o147  o147  o147  o167  o177  o157  o137  o117  o1.7  o127
+o147  o127  o1.7  o117  o137  o157  o177  o177  o177  o177  o177  o177  o177  o157  o137  o117  o1.7  o127  o147
+o167  o147  o127  o1.7  o117  o117  o137  o157  o157  o157  o157  o157  o137  o117  o117  o1.7  o127  o147  o167

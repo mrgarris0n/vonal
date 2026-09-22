@@ -298,7 +298,7 @@ pairs ever render identically, that is a build-time failure, not a silent
 ambiguity at decode time.
 
 **Animation falls out.** A `put` mutates a cell's scale, so the interpreter can
-emit a frame per step and dump a run as an animation.
+emit a frame per step, or one every N steps, and dump a run as an animation.
 
 ## 7. Error handling
 

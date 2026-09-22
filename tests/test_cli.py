@@ -282,3 +282,25 @@ def test_each_trace_frame_is_the_plate_rendered_with_the_current_field(tmp_path)
         )
         expected = render.render(type(plate)(plate.width, plate.height, rows))
         assert frame.tobytes() == expected.tobytes(), f"step {machine.steps}"
+
+
+def test_trace_every_keeps_the_first_and_final_frames_and_drops_the_rest(tmp_path):
+    full, sampled = tmp_path / "full", tmp_path / "sampled"
+    assert main(["trace", str(KINETIC), str(full)]) == 0
+    assert main(["trace", str(KINETIC), str(sampled), "--every", "10"]) == 0
+    all_frames = sorted(full.glob("*.png"))
+    kept = sorted(sampled.glob("*.png"))
+
+    # Every tenth step, plus the finished picture, which a stride that does
+    # not divide the run would otherwise skip.
+    assert len(kept) == len(range(0, len(all_frames), 10)) + 1
+    for mine, theirs in ((kept[0], all_frames[0]), (kept[-1], all_frames[-1])):
+        with Image.open(mine) as a, Image.open(theirs) as b:
+            assert a.tobytes() == b.tobytes()
+
+
+def test_trace_every_must_be_positive(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    assert main(["trace", str(src), str(tmp_path / "frames"), "--every", "0"]) == 1
+    assert "--every" in capsys.readouterr().err
