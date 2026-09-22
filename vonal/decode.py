@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import threading
+from typing import cast
 
 from PIL import Image
 
@@ -23,12 +24,18 @@ MAX_CELLS = 256 * 256
 MAX_PIXELS = MAX_CELLS * render.CELL * render.CELL
 
 
-def _colours(block: Image.Image, x: int, y: int) -> list[tuple[int, int, int]]:
+def _colours(block: Image.Image, x: int, y: int) -> dict[palette.RGB, int]:
+    """The cell's colours, each with its palette index. Any other colour is an error."""
     counted = block.getcolors(maxcolors=render.CELL * render.CELL)
-    found = [colour for _, colour in counted]
-    for colour in found:
-        if palette.index_of(colour) is None:
-            raise LoadError(x, y, f"colour {colour} is not in the palette")
+    if counted is None:
+        raise AssertionError("a cell cannot hold more colours than it has pixels")
+    found: dict[palette.RGB, int] = {}
+    for _, colour in counted:
+        rgb = cast(palette.RGB, colour)  # decode() converted the image to RGB
+        index = palette.index_of(rgb)
+        if index is None:
+            raise LoadError(x, y, f"colour {rgb} is not in the palette")
+        found[rgb] = index
     if len(found) > 2:
         raise LoadError(x, y, f"a cell shows at most two colours, found {len(found)}")
     return found
@@ -37,8 +44,8 @@ def _colours(block: Image.Image, x: int, y: int) -> list[tuple[int, int, int]]:
 def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     found = _colours(block, x, y)
     # extent(7) is 50 < 64, so a corner pixel is always ground.
-    ground_rgb = block.getpixel((0, 0))
-    ground = palette.index_of(ground_rgb)
+    ground_rgb = cast(palette.RGB, block.getpixel((0, 0)))
+    ground = found[ground_rgb]
 
     if len(found) == 1:
         return Cell(Form.VOID, 0, 0, ground)
@@ -47,7 +54,7 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     # The variant is the figure's offset from the ground, so it survives any
     # rotation of the pair. It can never be 0 here: a figure that matched its
     # ground would have shown one colour and been read as void above.
-    variant = (palette.index_of(form_rgb) - ground) % 8
+    variant = (found[form_rgb] - ground) % 8
 
     # tobytes() predates every Pillow version this project has ever
     # targeted (unlike get_flattened_data(), added in 12.1, or the

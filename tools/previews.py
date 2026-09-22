@@ -9,6 +9,7 @@ regenerates these in memory and compares.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -26,7 +27,7 @@ MAX_W, MAX_H = 200, 120
 
 
 @contextmanager
-def _ceiling():
+def _ceiling() -> Iterator[None]:
     """Pillow's bomb threshold, raised to the one the language defines.
 
     The quine is 22 megapixels, past Pillow's default. Setting this at import
@@ -51,7 +52,7 @@ def thumbnail(png: Path) -> Image.Image:
         # LANCZOS, not NEAREST: at these reductions a cell is one or two
         # pixels, so point sampling drops whole glyphs and the texture with
         # them. The preview is meant to read as the plate's colour and weight.
-        small = image.convert("RGB").resize(size, Image.LANCZOS)
+        small = image.convert("RGB").resize(size, Image.Resampling.LANCZOS)
         # Resampling eight flat colours produces thousands of intermediate
         # ones, which a PNG stores badly. Quantising back keeps the look and
         # roughly halves the file.

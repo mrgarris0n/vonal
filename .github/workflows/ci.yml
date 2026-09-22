@@ -36,6 +36,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      # Installed from the dev extra so the ruff version lives in pyproject only.
+      # Installed from the dev extra so the tool versions live in pyproject only.
       - run: pip install -e ".[dev]"
       - run: ruff check --output-format=github .
+      - run: mypy
