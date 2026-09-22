@@ -16,6 +16,23 @@ from vonal.errors import VonalError
 from vonal.machine import Machine
 
 
+def _positive_int(text: str) -> int:
+    """An argparse type for counts where zero or less would do nothing useful.
+
+    A cap of 0 or below stops the machine before its first step, and the only
+    sign is the capped-run note, which then blames the cap rather than the
+    argument. Rejected at parse time instead, with the usage line.
+    """
+    try:
+        value = int(text)
+    except ValueError:
+        # Otherwise argparse names this function in the message.
+        raise argparse.ArgumentTypeError(f"expected a whole number, got {text!r}") from None
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be at least 1, got {value}")
+    return value
+
+
 def _load(path: Path) -> Plate:
     """A .vsr is compiled in memory; anything else is decoded as an image."""
     if path.suffix == ".vsr":
@@ -152,8 +169,6 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
 
 
 def _cmd_trace(args: argparse.Namespace) -> int:
-    if args.every < 1:
-        raise VonalError(f"--every must be at least 1, got {args.every}")
     machine = Machine(_load(Path(args.plate)))
     out = Path(args.out)
     frames = _trace_frames(machine, args.max_steps, args.every)
@@ -191,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("run", help="execute a plate (.vsr or .png)")
     p.add_argument("plate")
-    p.add_argument("--max-steps", type=int, default=None)
+    p.add_argument("--max-steps", type=_positive_int, default=None)
     p.set_defaults(func=_cmd_run)
 
     p = sub.add_parser(
@@ -200,9 +215,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("plate")
     p.add_argument("out", help="a directory, or a path ending .gif to animate")
-    p.add_argument("--max-steps", type=int, default=1000)
+    p.add_argument("--max-steps", type=_positive_int, default=1000)
     p.add_argument(
-        "--every", type=int, default=1, help="keep one frame every N steps, plus the last"
+        "--every", type=_positive_int, default=1, help="keep one frame every N steps, plus the last"
     )
     p.add_argument(
         "--frame-ms", type=int, default=100, help="milliseconds per frame in a .gif"
