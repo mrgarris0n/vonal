@@ -155,12 +155,13 @@ the variant is an offset: one instruction, two colours. It is the inverse of
 `examples/inversion.vsr` is a chequer that turns itself inside out by
 resizing. Every square is `div`, variant 4, on alternating blue and red
 grounds, and offset 4 is the one that makes each square's figure exactly its
-neighbours' ground: `2 + 4 = 6` and `6 + 4 = 2`. At size 0 the chequer reads
-blue and red, and at size 7 each square nearly fills its cell and it reads red
-and blue. The program writes the gradient `(x + y) / 4` into the field, so
-`examples/inversion.gif` shows one corner inverting and the other staying
-put; retracing it wants `--max-steps 7000`. No colour changes anywhere, and
-no opcode can change one.
+neighbours' ground: `2 + 4 = 6` and `6 + 4 = 2`. A small square reads as its
+ground and a full-size one as its neighbour's, so the plate ships as a cone of
+sizes with its centre already inverted. The program reads each size with
+`get` and writes back `7 - s`, the cone becomes a bowl, and
+`examples/inversion.gif` shows the inversion moving from the centre to the
+rim; retracing it wants `--max-steps 8100`. No colour changes anywhere, and no
+opcode can change one.
 
 `examples/tally.vsr` is what the offset encoding buys. Every cell is its
 own figure and ground pair, keyed by `(x + y) mod 8`, so all eight colours
@@ -224,7 +225,7 @@ the plate stops describing itself.
 | <img src="docs/previews/swell.png" width="90" height="120" alt="swell"> | `swell` | nothing; it inflates its own flat lattice into a sphere |
 | <img src="docs/previews/tally.png" width="180" height="120" alt="tally"> | `tally` | `613`, the total of its own glyph sizes |
 | <img src="docs/previews/vortex.png" width="120" height="120" alt="vortex"> | `vortex` | `vortex`, while the eye runs every cell once |
-| <img src="docs/previews/inversion.png" width="101" height="120" alt="inversion"> | `inversion` | nothing; it inverts its own chequer by resizing it |
+| <img src="docs/previews/inversion.png" width="102" height="120" alt="inversion"> | `inversion` | nothing; it turns its own bulge inside out |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash

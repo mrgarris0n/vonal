@@ -575,19 +575,26 @@ def test_vortex_can_be_recoloured_without_changing_what_it_does():
 
 
 INVERSION_TOP = 3  # rows 0-1 are the program, row 2 holds the exit
+INVERSION_SIZE = 17
 
 
 def inversion_region(scales_at):
-    return [[scales_at(x, y + INVERSION_TOP) for x in range(16)] for y in range(16)]
+    return [[scales_at(x, y + INVERSION_TOP) for x in range(INVERSION_SIZE)]
+            for y in range(INVERSION_SIZE)]
 
 
-INVERSION_EXPECTED = [[(x + y) // 4 for x in range(16)] for y in range(16)]
+def inversion_shipped():
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    return inversion_region(lambda x, y: plate.at(x, y).scale)
 
 
-def test_the_inversion_gradient_uses_the_whole_range_and_no_more():
-    # Why the loop needs no clamp: PUT faults outside 0-7, and 30 // 4 == 7.
-    values = [v for row in INVERSION_EXPECTED for v in row]
-    assert (min(values), max(values)) == (0, 7)
+def test_inversion_ships_a_bulge_with_its_centre_already_inverted():
+    # The shipped picture is the composition, not a blank to be filled: full
+    # size at the centre, nothing in the corners.
+    region = inversion_shipped()
+    centre = INVERSION_SIZE // 2
+    assert region[centre][centre] == 7
+    assert region[0][0] == region[0][-1] == region[-1][0] == region[-1][-1] == 0
 
 
 def test_every_inversion_square_is_drawn_in_its_neighbours_ground():
@@ -595,24 +602,49 @@ def test_every_inversion_square_is_drawn_in_its_neighbours_ground():
     # swaps its cell into its neighbour's colours rather than a third one.
     plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
     for y in range(INVERSION_TOP, plate.height):
-        for x in range(16):
+        for x in range(INVERSION_SIZE):
             cell = plate.at(x, y)
             assert (cell.form, cell.variant) == (Form.SQUARE, 4)
             neighbours = [plate.at(nx, ny) for nx, ny in ((x + 1, y), (x, y + 1))
-                          if nx < 16 and ny < plate.height]
+                          if nx < INVERSION_SIZE and ny < plate.height]
             assert all(cell.figure == n.ground for n in neighbours)
 
 
-def test_inversion_ships_flat_and_computes_its_own_gradient():
+def test_inversion_negates_its_own_picture():
     plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
-    assert inversion_region(lambda x, y: plate.at(x, y).scale) == [[0] * 16] * 16
-
     out = io.StringIO()
     machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
-    machine.run(max_steps=7000)
+    machine.run(max_steps=8100)
 
     assert machine.halted and out.getvalue() == ""
-    assert inversion_region(lambda x, y: machine.field[y][x]) == INVERSION_EXPECTED
+    expected = [[7 - s for s in row] for row in inversion_shipped()]
+    assert inversion_region(lambda x, y: machine.field[y][x]) == expected
+    # Only the chequer is written; the program rows keep their sizes.
+    assert machine.field[:INVERSION_TOP] == [
+        [c.scale for c in row] for row in plate.cells[:INVERSION_TOP]
+    ]
+
+
+def test_inversion_reads_its_picture_rather_than_reciting_it():
+    # Reshape the cone and the result must follow, which it can only do if
+    # the program reads the sizes with get instead of writing a fixed answer.
+    base = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    rng = random.Random(1906)
+    reshaped = Plate(base.width, base.height, tuple(
+        tuple(
+            Cell(c.form, c.variant, rng.randrange(8), c.ground) if y >= INVERSION_TOP else c
+            for c in row
+        )
+        for y, row in enumerate(base.cells)
+    ))
+    machine = Machine(reshaped, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=8100)
+    assert machine.halted
+    assert all(
+        machine.field[y][x] == 7 - reshaped.at(x, y).scale
+        for y in range(INVERSION_TOP, base.height)
+        for x in range(INVERSION_SIZE)
+    )
 
 
 def test_inversion_survives_a_full_image_round_trip():
@@ -621,13 +653,16 @@ def test_inversion_survives_a_full_image_round_trip():
 
 def test_the_shipped_inversion_gif_is_not_stale():
     # Checked from its frames rather than re-traced, as swell's is: the plate
-    # runs 6659 steps, and the claim lives in the first and last frame.
+    # runs 8094 steps, and the claim lives in the first and last frame.
     with Image.open(EXAMPLES / "inversion.gif") as image:
         frames = [frame.convert("RGB") for frame in ImageSequence.Iterator(image)]
 
-    # 247, not 257: the 10 cells with x + y < 4 are written the size they
-    # already ship at, and a write that changes no pixel is collapsed away.
-    assert len(frames) == 247
+    # One frame per square plus the first: 7 - s never equals s, so every
+    # write changes a pixel and none is collapsed away.
+    assert len(frames) == INVERSION_SIZE * INVERSION_SIZE + 1
     first, last = decode.decode(frames[0]), decode.decode(frames[-1])
-    assert inversion_region(lambda x, y: first.at(x, y).scale) == [[0] * 16] * 16
-    assert inversion_region(lambda x, y: last.at(x, y).scale) == INVERSION_EXPECTED
+    shipped = inversion_shipped()
+    assert inversion_region(lambda x, y: first.at(x, y).scale) == shipped
+    assert inversion_region(lambda x, y: last.at(x, y).scale) == [
+        [7 - s for s in row] for row in shipped
+    ]
