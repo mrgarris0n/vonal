@@ -299,8 +299,35 @@ def test_trace_every_keeps_the_first_and_final_frames_and_drops_the_rest(tmp_pat
             assert a.tobytes() == b.tobytes()
 
 
-def test_trace_every_must_be_positive(tmp_path, capsys):
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["run", "{src}", "--max-steps", "0"],
+        ["run", "{src}", "--max-steps", "-5"],
+        ["trace", "{src}", "{out}", "--max-steps", "0"],
+        ["trace", "{src}", "{out}", "--every", "0"],
+    ],
+    ids=["run-zero", "run-negative", "trace-zero", "every-zero"],
+)
+def test_step_counts_must_be_positive(tmp_path, capsys, argv):
+    # A cap of zero or less would stop before the first step and exit 0 with
+    # only the capped-run note, which blames the cap rather than the argument.
     src = tmp_path / "hello.vsr"
     src.write_text(HELLO)
-    assert main(["trace", str(src), str(tmp_path / "frames"), "--every", "0"]) == 1
-    assert "--every" in capsys.readouterr().err
+    out = tmp_path / "frames"
+    argv = [a.format(src=src, out=out) for a in argv]
+    with pytest.raises(SystemExit) as exit_info:
+        main(argv)
+    assert exit_info.value.code == 2
+    err = capsys.readouterr().err
+    assert "must be at least 1" in err and argv[-2] in err
+    assert not out.exists()
+
+
+def test_a_non_numeric_step_count_is_a_usage_error(tmp_path, capsys):
+    src = tmp_path / "hello.vsr"
+    src.write_text(HELLO)
+    with pytest.raises(SystemExit) as exit_info:
+        main(["run", str(src), "--max-steps", "abc"])
+    assert exit_info.value.code == 2
+    assert "expected a whole number, got 'abc'" in capsys.readouterr().err
