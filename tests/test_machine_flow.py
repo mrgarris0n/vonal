@@ -1,4 +1,5 @@
 import io
+
 import pytest
 
 from vonal.cell import Heading

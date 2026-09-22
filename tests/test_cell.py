@@ -1,4 +1,5 @@
 import pytest
+
 from vonal.cell import Cell, Form, Heading, Plate
 
 
@@ -32,7 +33,7 @@ def test_non_void_cell_rejects_variant_zero():
     # Variant 0 is the offset that would paint the figure in the ground's own
     # colour, so the cell would render as a void and decode back as one.
     Cell(Form.DISC, variant=3, ground=5)  # fine
-    with pytest.raises(ValueError, match="variant 1..7"):
+    with pytest.raises(ValueError, match=r"variant 1\.\.7"):
         Cell(Form.DISC, variant=0, ground=5)
 
 

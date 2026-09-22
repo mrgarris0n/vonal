@@ -1,4 +1,5 @@
 import pytest
+
 from vonal.cell import Cell, Form, Plate
 from vonal.errors import LoadError
 from vonal.isa import Op, lookup, validate

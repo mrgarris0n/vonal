@@ -1,8 +1,8 @@
 from hypothesis import given, settings
 
+from tests.strategies import plates
 from vonal.cell import Cell, Form, Plate
 from vonal.notation import emit, parse
-from tests.strategies import plates
 
 
 def test_emit_writes_the_header_and_aligned_tokens():
