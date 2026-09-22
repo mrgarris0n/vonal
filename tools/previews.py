@@ -9,9 +9,8 @@ regenerates these in memory and compares.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from contextlib import contextmanager
+from pathlib import Path
 
 from PIL import Image
 

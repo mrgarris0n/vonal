@@ -211,7 +211,8 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser(
         "trace",
-        help="write one frame per step (or per --every N): a directory of PNGs, or an animated .gif",
+        help="write one frame per step (or per --every N): "
+        "a directory of PNGs, or an animated .gif",
     )
     p.add_argument("plate")
     p.add_argument("out", help="a directory, or a path ending .gif to animate")

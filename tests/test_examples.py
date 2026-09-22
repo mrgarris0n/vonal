@@ -346,7 +346,7 @@ def test_swell_ships_flat_and_computes_its_own_bulge():
     # The claim is that the picture is computed, not authored. A plate that
     # shipped with the swell already in its scales would pass every other
     # assertion here while demonstrating nothing.
-    assert set(v for row in swell_field(plate) for v in row) == {SWELL_FLAT}
+    assert {v for row in swell_field(plate) for v in row} == {SWELL_FLAT}
 
     machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
     machine.run(max_steps=20_000)
@@ -354,7 +354,7 @@ def test_swell_ships_flat_and_computes_its_own_bulge():
     assert machine.halted
     assert [machine.field[y + SWELL_TOP] for y in range(15)] == swell_expected()
     # The field is a copy, as with kinetic and bubble: the plate is immutable.
-    assert set(v for row in swell_field(plate) for v in row) == {SWELL_FLAT}
+    assert {v for row in swell_field(plate) for v in row} == {SWELL_FLAT}
 
 
 def test_swell_survives_a_full_image_round_trip():
@@ -372,7 +372,7 @@ def test_the_shipped_swell_gif_is_not_stale():
     # 202, not 226: 24 of the 225 cells compute to the size they already
     # shipped at, and a write that changes no pixel is collapsed away.
     assert len(frames) == 202
-    assert set(v for row in swell_field(decode.decode(frames[0])) for v in row) == {SWELL_FLAT}
+    assert {v for row in swell_field(decode.decode(frames[0])) for v in row} == {SWELL_FLAT}
     assert swell_field(decode.decode(frames[-1])) == swell_expected()
 
 
@@ -516,7 +516,8 @@ def test_the_quine_reads_its_own_data_rather_than_reciting_it():
     printed = output_of_plate(perturbed, max_steps=1_000_000, label="quine perturbed")
 
     assert printed == notation.emit(perturbed), "it stopped describing itself"
-    moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
+    pairs = zip(notation.emit(plate), printed, strict=True)
+    moved = [i for i, (a, b) in enumerate(pairs) if a != b]
     assert len(moved) == 1, f"{len(moved)} characters moved, expected 1"
 
 
@@ -535,7 +536,9 @@ def test_a_cell_inside_the_encoded_region_is_load_bearing_twice():
     printed = output_of_plate(perturbed, max_steps=1_000_000, label="quine data")
 
     assert printed != notation.emit(perturbed)
-    moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
+    # Not strict: a disturbed quine owes no particular length.
+    pairs = zip(notation.emit(plate), printed, strict=False)
+    moved = [i for i, (a, b) in enumerate(pairs) if a != b]
     assert len(moved) > 1, "a data cell should disturb more than its own token"
 
 
@@ -728,7 +731,8 @@ def test_ripple_ends_one_step_short_of_where_it_began():
     machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
     machine.run(max_steps=100_000)
     final = ripple_region(lambda x, y: machine.field[y][x])
-    assert ripple_step(final, ripple_table(plate)) == ripple_region(lambda x, y: plate.at(x, y).scale)
+    shipped = ripple_region(lambda x, y: plate.at(x, y).scale)
+    assert ripple_step(final, ripple_table(plate)) == shipped
 
 
 def test_ripple_reads_its_step_from_the_picture_rather_than_reciting_it():

@@ -6,7 +6,9 @@ license = {text = "MIT"}
 dependencies = ["pillow>=10.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "hypothesis>=6.100"]
+# ruff is pinned to a minor series: a new release can add rules under the
+# prefixes selected below and fail CI on a change that touched no code.
+dev = ["pytest>=8.0", "hypothesis>=6.100", "ruff>=0.16,<0.17"]
 
 [project.scripts]
 vonal = "vonal.cli:main"
@@ -17,3 +19,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Listed rather than left to ruff's defaults, which change between releases.
+select = ["E", "F", "W", "I", "B", "UP", "C4", "RUF"]

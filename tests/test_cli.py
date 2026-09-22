@@ -276,9 +276,9 @@ def test_each_trace_frame_is_the_plate_rendered_with_the_current_field(tmp_path)
         rows = tuple(
             tuple(
                 cell if cell.is_void else Cell(cell.form, cell.variant, value, cell.ground)
-                for cell, value in zip(row, field_row)
+                for cell, value in zip(row, field_row, strict=True)
             )
-            for row, field_row in zip(plate.cells, machine.field)
+            for row, field_row in zip(plate.cells, machine.field, strict=True)
         )
         expected = render.render(type(plate)(plate.width, plate.height, rows))
         assert frame.tobytes() == expected.tobytes(), f"step {machine.steps}"

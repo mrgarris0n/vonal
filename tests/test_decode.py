@@ -6,12 +6,12 @@ import pytest
 from hypothesis import given, settings
 from PIL import Image, UnidentifiedImageError
 
+from tests.strategies import loadable_plates
 from vonal import decode as decode_module
 from vonal import notation, palette, render
 from vonal.cell import Cell, Form, Plate
 from vonal.decode import decode
 from vonal.errors import LoadError, VonalError
-from tests.strategies import loadable_plates
 
 
 def one(cell):
@@ -167,7 +167,7 @@ def test_concurrent_loads_leave_the_ambient_limit_intact(tmp_path, monkeypatch):
     def worker():
         try:
             decode_module.load(png)
-        except Exception as exc:          # noqa: BLE001 - reported, not swallowed
+        except Exception as exc:  # reported, not swallowed
             failures.append(exc)
 
     threads = [threading.Thread(target=worker) for _ in range(8)]

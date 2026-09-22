@@ -1,6 +1,5 @@
 """The README ships images and a table; both can drift from the examples."""
 
-import io
 import re
 from pathlib import Path
 
@@ -32,7 +31,7 @@ def test_each_preview_is_current(plate):
     # examples/*.png, and forget docs/previews. The README would then show the
     # old picture indefinitely, and nothing else in the suite opens these.
     shipped = previews.PREVIEWS / f"{plate}.png"
-    assert shipped.exists(), f"run python tools/previews.py"
+    assert shipped.exists(), "run python tools/previews.py"
 
     fresh = previews.thumbnail(previews.EXAMPLES / f"{plate}.png").convert("RGB")
     with Image.open(shipped) as image:

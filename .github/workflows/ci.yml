@@ -26,3 +26,16 @@ jobs:
       - run: pip install -e ".[dev]"
       # -W error matches how the suite is run locally: a warning is a failure.
       - run: pytest -q -W error
+
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # Installed from the dev extra so the ruff version lives in pyproject only.
+      - run: pip install -e ".[dev]"
+      - run: ruff check --output-format=github .

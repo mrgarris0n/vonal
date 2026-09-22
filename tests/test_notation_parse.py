@@ -1,4 +1,5 @@
 import pytest
+
 from vonal.cell import Form
 from vonal.errors import CompileError
 from vonal.notation import parse
