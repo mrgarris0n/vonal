@@ -1,0 +1,53 @@
+# inversion: a chequer that turns itself inside out by resizing
+#
+#     $ vonal trace examples/inversion.vsr inversion.gif --max-steps 8100
+#
+# Rows 3 to 19 are a blue and red chequer of squares, every one of them the
+# same instruction, `div`, and their sizes are a cone: 7 at the centre, 0 in
+# the corners. Where a square is small the chequer reads as blue and red;
+# where it all but fills its cell the chequer reads as red and blue, so the
+# plate ships with its middle already inverted, bulging toward the viewer.
+#
+# The program reads every square's size and writes back 7 minus it. The cone
+# becomes a bowl, and the inversion moves from the centre out to the rim.
+# Nothing is recoloured, and no opcode could: only sizes change.
+#
+# That works for one offset only. The figure is (ground + variant) mod 8, and
+# div is variant 4, so on ground 2 (blue) it paints 6 (red) and on ground 6 it
+# paints 10 mod 8 = 2. Each square is drawn in exactly its neighbours' ground
+# colour, so growing it swaps the pair. At any other offset the figure is a
+# third colour and nothing inverts. It also means the photographic negative
+# of the chequer, figure and ground exchanged in every square, is the same
+# chequer of divs: 8 - 4 = 4 is the only variant that is its own negation.
+#
+# The loop is swell's: one counter j, x = j mod 17 and y = j / 17 + 3. It
+# duplicates the address with over over, reads the size with get, and push 3 /
+# roll rotates [x, y, 7 - s] into [7 - s, x, y], the order PUT pops them in.
+# 7 - s needs no clamp, since s is already 0 to 7. j counts down from 288 so
+# the exit test is a bare `turn unless` on a copy of it, which is why the
+# chequer inverts from the bottom right. Rows 0 and 1 hold the seed and the
+# loop, the void in row 2 is the exit, and the chequer's ground runs under the
+# program too.
+
+%plate 17x20
+
+o142  o246  o212  >1.6  o112  #2.6  %1.2  o126  o212  #5.6  %4.2  o126  o212  #4.6  o132  #1.6  v1.2
+#4.6  #4.2  #4.6  ^1.2  <1.6  v3.2  %1.6  @2.2  %5.6  o132  #2.6  %3.2  o176  @1.2  %4.6  %4.2  <1.6
+#4.2  #4.6  #4.2  #4.6  #4.2  ...6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #416  #412  #416  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.6  #4.2  #4.6  #4.2  #416  #412  #416  #422  #426  #422  #416  #412  #416  #4.2  #4.6  #4.2  #4.6
+#4.2  #4.6  #4.2  #416  #412  #426  #422  #426  #422  #426  #422  #426  #412  #416  #4.2  #4.6  #4.2
+#4.6  #4.2  #416  #412  #426  #422  #436  #432  #436  #432  #436  #422  #426  #412  #416  #4.2  #4.6
+#4.2  #4.6  #412  #426  #422  #436  #442  #446  #442  #446  #442  #436  #422  #426  #412  #4.6  #4.2
+#4.6  #4.2  #416  #422  #436  #442  #446  #452  #456  #452  #446  #442  #436  #422  #416  #4.2  #4.6
+#4.2  #416  #422  #426  #432  #446  #452  #466  #462  #466  #452  #446  #432  #426  #422  #416  #4.2
+#4.6  #412  #426  #422  #436  #442  #456  #462  #476  #462  #456  #442  #436  #422  #426  #412  #4.6
+#4.2  #416  #422  #426  #432  #446  #452  #466  #462  #466  #452  #446  #432  #426  #422  #416  #4.2
+#4.6  #4.2  #416  #422  #436  #442  #446  #452  #456  #452  #446  #442  #436  #422  #416  #4.2  #4.6
+#4.2  #4.6  #412  #426  #422  #436  #442  #446  #442  #446  #442  #436  #422  #426  #412  #4.6  #4.2
+#4.6  #4.2  #416  #412  #426  #422  #436  #432  #436  #432  #436  #422  #426  #412  #416  #4.2  #4.6
+#4.2  #4.6  #4.2  #416  #412  #426  #422  #426  #422  #426  #422  #426  #412  #416  #4.2  #4.6  #4.2
+#4.6  #4.2  #4.6  #4.2  #416  #412  #416  #422  #426  #422  #416  #412  #416  #4.2  #4.6  #4.2  #4.6
+#4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #416  #412  #416  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2
+#4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6  #4.2  #4.6

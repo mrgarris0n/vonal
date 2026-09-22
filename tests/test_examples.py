@@ -537,3 +537,132 @@ def test_a_cell_inside_the_encoded_region_is_load_bearing_twice():
     assert printed != notation.emit(perturbed)
     moved = [i for i, (a, b) in enumerate(zip(notation.emit(plate), printed)) if a != b]
     assert len(moved) > 1, "a data cell should disturb more than its own token"
+
+
+def test_vortex_prints_its_name():
+    assert output_of("vortex.vsr") == "vortex\n"
+
+
+def test_vortex_survives_a_full_image_round_trip():
+    assert round_trips("vortex.vsr")
+
+
+def test_the_vortex_eye_runs_every_cell_exactly_once():
+    # The plate's whole claim: no cell is decoration the eye never reaches.
+    # Visiting a cell twice would mean the spiral loops; missing one would
+    # mean some of the picture is not route.
+    plate = notation.parse((EXAMPLES / "vortex.vsr").read_text())
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=io.StringIO())
+    visits = []
+    while not machine.halted:
+        visits.append((machine.x, machine.y))
+        machine.step()
+    assert sorted(visits) == [(x, y) for x in range(15) for y in range(15)]
+    assert visits[-1] == (7, 7) and plate.at(7, 7).is_void
+
+
+def test_vortex_can_be_recoloured_without_changing_what_it_does():
+    # Its colours are all ground: every turn shares offset 1. Scatter the
+    # grounds and the route and the output must not move.
+    base = notation.parse((EXAMPLES / "vortex.vsr").read_text())
+    rng = random.Random(1906)
+    recoloured = Plate(base.width, base.height, tuple(
+        tuple(cell if cell.is_void else Cell(cell.form, cell.variant, cell.scale, rng.randrange(8))
+              for cell in row)
+        for row in base.cells
+    ))
+    assert output_of_plate(recoloured, label="vortex") == "vortex\n"
+
+
+INVERSION_TOP = 3  # rows 0-1 are the program, row 2 holds the exit
+INVERSION_SIZE = 17
+
+
+def inversion_region(scales_at):
+    return [[scales_at(x, y + INVERSION_TOP) for x in range(INVERSION_SIZE)]
+            for y in range(INVERSION_SIZE)]
+
+
+def inversion_shipped():
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    return inversion_region(lambda x, y: plate.at(x, y).scale)
+
+
+def test_inversion_ships_a_bulge_with_its_centre_already_inverted():
+    # The shipped picture is the composition, not a blank to be filled: full
+    # size at the centre, nothing in the corners.
+    region = inversion_shipped()
+    centre = INVERSION_SIZE // 2
+    assert region[centre][centre] == 7
+    assert region[0][0] == region[0][-1] == region[-1][0] == region[-1][-1] == 0
+
+
+def test_every_inversion_square_is_drawn_in_its_neighbours_ground():
+    # The property offset 4 buys and no other offset has: growing a square
+    # swaps its cell into its neighbour's colours rather than a third one.
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    for y in range(INVERSION_TOP, plate.height):
+        for x in range(INVERSION_SIZE):
+            cell = plate.at(x, y)
+            assert (cell.form, cell.variant) == (Form.SQUARE, 4)
+            neighbours = [plate.at(nx, ny) for nx, ny in ((x + 1, y), (x, y + 1))
+                          if nx < INVERSION_SIZE and ny < plate.height]
+            assert all(cell.figure == n.ground for n in neighbours)
+
+
+def test_inversion_negates_its_own_picture():
+    plate = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    out = io.StringIO()
+    machine = Machine(plate, stdin=io.StringIO(""), stdout=out)
+    machine.run(max_steps=8100)
+
+    assert machine.halted and out.getvalue() == ""
+    expected = [[7 - s for s in row] for row in inversion_shipped()]
+    assert inversion_region(lambda x, y: machine.field[y][x]) == expected
+    # Only the chequer is written; the program rows keep their sizes.
+    assert machine.field[:INVERSION_TOP] == [
+        [c.scale for c in row] for row in plate.cells[:INVERSION_TOP]
+    ]
+
+
+def test_inversion_reads_its_picture_rather_than_reciting_it():
+    # Reshape the cone and the result must follow, which it can only do if
+    # the program reads the sizes with get instead of writing a fixed answer.
+    base = notation.parse((EXAMPLES / "inversion.vsr").read_text())
+    rng = random.Random(1906)
+    reshaped = Plate(base.width, base.height, tuple(
+        tuple(
+            Cell(c.form, c.variant, rng.randrange(8), c.ground) if y >= INVERSION_TOP else c
+            for c in row
+        )
+        for y, row in enumerate(base.cells)
+    ))
+    machine = Machine(reshaped, stdin=io.StringIO(""), stdout=io.StringIO())
+    machine.run(max_steps=8100)
+    assert machine.halted
+    assert all(
+        machine.field[y][x] == 7 - reshaped.at(x, y).scale
+        for y in range(INVERSION_TOP, base.height)
+        for x in range(INVERSION_SIZE)
+    )
+
+
+def test_inversion_survives_a_full_image_round_trip():
+    assert round_trips("inversion.vsr")
+
+
+def test_the_shipped_inversion_gif_is_not_stale():
+    # Checked from its frames rather than re-traced, as swell's is: the plate
+    # runs 8094 steps, and the claim lives in the first and last frame.
+    with Image.open(EXAMPLES / "inversion.gif") as image:
+        frames = [frame.convert("RGB") for frame in ImageSequence.Iterator(image)]
+
+    # One frame per square plus the first: 7 - s never equals s, so every
+    # write changes a pixel and none is collapsed away.
+    assert len(frames) == INVERSION_SIZE * INVERSION_SIZE + 1
+    first, last = decode.decode(frames[0]), decode.decode(frames[-1])
+    shipped = inversion_shipped()
+    assert inversion_region(lambda x, y: first.at(x, y).scale) == shipped
+    assert inversion_region(lambda x, y: last.at(x, y).scale) == [
+        [7 - s for s in row] for row in shipped
+    ]
