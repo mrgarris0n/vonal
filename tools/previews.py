@@ -67,8 +67,9 @@ def main() -> None:
     PREVIEWS.mkdir(parents=True, exist_ok=True)
     for png in sources():
         out = PREVIEWS / png.name
-        thumbnail(png).save(out)
-        print(f"{out.relative_to(ROOT)}  {thumbnail(png).size[0]}x{thumbnail(png).size[1]}")
+        thumb = thumbnail(png)
+        thumb.save(out)
+        print(f"{out.relative_to(ROOT)}  {thumb.size[0]}x{thumb.size[1]}")
 
 
 if __name__ == "__main__":
