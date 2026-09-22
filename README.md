@@ -246,6 +246,7 @@ the plate stops describing itself.
 ```bash
 .venv/bin/pytest
 .venv/bin/ruff check .
+.venv/bin/mypy
 ```
 
 ## Design

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from importlib.metadata import version
 from pathlib import Path
 
@@ -226,8 +226,9 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_trace)
 
     args = parser.parse_args(argv)
+    command: Callable[[argparse.Namespace], int] = args.func
     try:
-        return args.func(args)
+        return command(args)
     except VonalError as exc:
         print(f"vonal: {exc}", file=sys.stderr)
         return 1
