@@ -103,3 +103,23 @@ def test_eof_pushes_minus_one(variant):
 def test_malformed_numeric_input_is_an_error():
     with pytest.raises(VonalRuntimeError, match="not a number"):
         run("%plate 2x1\n\n+3.7  ....\n", stdin="banana\n")
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["1" + "0" * 5000, "-" + "9" * 4999 + "3", "12345" + "0" * 4321],
+    ids=["power-of-ten", "negative", "leading-digits"],
+)
+def test_numbers_past_pythons_digit_limit_round_trip(text):
+    # The stack is unbounded, but str() and int() refuse past about 4300
+    # digits. Reading a number in and printing it back must still be exact.
+    _, out = run("%plate 3x1\n\n+3.7  +1.7  ....\n", stdin=text + "\n")
+    assert out == text
+
+
+def test_a_number_past_the_digit_limit_is_computed_exactly():
+    # 10**4400 built by mul, then printed: the crash this guards against.
+    machine = Machine(parse("%plate 2x1\n\n+1.7  ....\n"), stdout=io.StringIO())
+    machine.stack = [10**4400 - 1]
+    machine.run()
+    assert machine.stdout.getvalue() == "9" * 4400
