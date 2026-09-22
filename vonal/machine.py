@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from typing import TextIO
 
@@ -145,7 +146,7 @@ class Machine:
 
     def _io(self, op: Op, x: int, y: int) -> None:
         if op is Op.OUT_NUM:
-            self.stdout.write(str(self._pop(x, y)))
+            self.stdout.write(_decimal(self._pop(x, y)))
         elif op is Op.OUT_CHAR:
             value = self._pop(x, y)
             try:
@@ -161,7 +162,7 @@ class Machine:
                 self.stack.append(-1)
                 return
             try:
-                self.stack.append(int(line.strip()))
+                self.stack.append(_parse_decimal(line.strip()))
             except ValueError as exc:
                 raise VonalRuntimeError(x, y, f"{line.strip()!r} is not a number") from exc
 
@@ -178,3 +179,41 @@ _STACK = {Op.DUP, Op.POP, Op.SWAP, Op.OVER, Op.ROLL}
 _COMPARE = {Op.GT, Op.LT, Op.EQ}
 _TURNS = {Op.TURN, Op.TURN_IF, Op.TURN_UNLESS}
 _FIELD = {Op.GET, Op.PUT}
+
+
+# Python refuses to convert an int of more than about 4300 digits to or from
+# text, but the stack is unbounded and `mul` gets there quickly. Converting in
+# chunks keeps every individual str()/int() call under the limit without
+# raising it, which would mean mutating process-wide interpreter state. 500
+# is below the smallest limit a host can set (640).
+_CHUNK = 500
+_DIGITS = re.compile(r"[+-]?[0-9]+")
+
+
+def _decimal(value: int) -> str:
+    try:
+        return str(value)
+    except ValueError:
+        pass
+    sign, value = ("-" if value < 0 else ""), abs(value)
+    chunks = []
+    while value:
+        value, low = divmod(value, 10**_CHUNK)
+        chunks.append(low)
+    head, *rest = reversed(chunks)
+    return sign + str(head) + "".join(f"{chunk:0{_CHUNK}d}" for chunk in rest)
+
+
+def _parse_decimal(text: str) -> int:
+    try:
+        return int(text)
+    except ValueError:
+        # Only the digit limit is worth retrying; anything else is not a number.
+        if not _DIGITS.fullmatch(text):
+            raise
+    body = text.lstrip("+-")
+    value = 0
+    for start in range(0, len(body), _CHUNK):
+        chunk = body[start : start + _CHUNK]
+        value = value * 10 ** len(chunk) + int(chunk)
+    return -value if text.startswith("-") else value
