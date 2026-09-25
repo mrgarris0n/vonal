@@ -133,9 +133,10 @@ proportionally longer, so the file stays small without the timing changing.
 values as the sizes of eight discs, and the program bubble sorts that row of
 the field in place, so the picture rearranges itself into a rising staircase
 while it runs. `examples/bubble.gif` is the sort. Retracing it wants
-`--max-steps 2000`: the plate runs 1801 steps against a `trace` default of
-1000, and stopping at the cap says so rather than quietly handing you an
-animation that ends mid-sort.
+`--max-steps 2000 --frame-ms 15`. The cap is the one that matters: the plate
+runs 1801 steps against a `trace` default of 1000, and stopping at the cap
+says so rather than quietly handing you an animation that ends mid-sort. The
+frame time is only the speed the shipped GIF plays at.
 
 `examples/swell.vsr` computes its composition instead of carrying one. It
 ships flat — 225 squares in rows 5 to 19, every one the same size — and the
@@ -173,8 +174,8 @@ disc's size alone says where it is in the wave. The step is a lookup table,
 and the table is eight discs in row 2 that the program reads with `get`:
 reshape them and the wave changes, and write the cycle run forward there
 (`2 0 4 1 6 3 7 5`) and the ripples fall inward. Every pass is exactly 10260
-steps, so `examples/ripple.gif` is traced with `--every 10260`, one frame per
-finished pass; seven passes leave it one step short of where it began, so the
+steps, so `examples/ripple.gif` is traced with `--every 10260 --frame-ms 120`,
+one frame per finished pass; seven passes leave it one step short of where it began, so the
 animation loops without a seam.
 
 `examples/tally.vsr` is what the offset encoding buys. Every cell is its
