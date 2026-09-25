@@ -6,7 +6,7 @@ import os
 import threading
 from typing import cast
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 from vonal import isa, palette, render
 from vonal.cell import Cell, Form, Plate
@@ -22,6 +22,10 @@ from vonal.errors import LoadError, VonalError
 # once decoded to RGB, which is the practical limit anyway.
 MAX_CELLS = 256 * 256
 MAX_PIXELS = MAX_CELLS * render.CELL * render.CELL
+
+
+# A bytes.translate() table: 0 stays GROUND, any other value becomes FORM.
+_NONZERO = bytes([render.GROUND] + [render.FORM] * 255)
 
 
 def _colours(block: Image.Image, x: int, y: int) -> dict[palette.RGB, int]:
@@ -56,16 +60,13 @@ def _decode_cell(block: Image.Image, x: int, y: int) -> Cell:
     # ground would have shown one colour and been read as void above.
     variant = (found[form_rgb] - ground) % 8
 
-    # tobytes() predates every Pillow version this project has ever
-    # targeted (unlike get_flattened_data(), added in 12.1, or the
-    # deprecated getdata() it replaced), and byte-slice comparison against
-    # the raw RGB triples is faster than either: no per-pixel tuple
-    # construction and comparison, just a bytes slice compare.
-    raw, form_bytes = block.tobytes(), bytes(form_rgb)
-    mask = bytes(
-        render.FORM if raw[i : i + 3] == form_bytes else render.GROUND
-        for i in range(0, len(raw), 3)
-    )
+    # The cell shows exactly two colours, so a pixel that differs from the
+    # ground is figure. The largest of its three channel differences is 0
+    # exactly where it matches the ground, which keeps this exact while
+    # running in C: a per-pixel Python loop was nearly all of decode's time.
+    ground_block = Image.new("RGB", block.size, ground_rgb)
+    r, g, b = ImageChops.difference(block, ground_block).split()
+    mask = ImageChops.lighter(ImageChops.lighter(r, g), b).tobytes().translate(_NONZERO)
     match = render.TEMPLATES.get(mask)
     if match is None:
         raise LoadError(x, y, "no glyph matches this cell")
