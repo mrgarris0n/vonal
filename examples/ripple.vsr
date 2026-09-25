@@ -1,6 +1,6 @@
 # ripple: rings that travel outward, one step per pass
 #
-#     $ vonal trace examples/ripple.vsr ripple.gif --max-steps 72000 --every 10260
+#     $ vonal trace examples/ripple.vsr ripple.gif --max-steps 72000 --every 10260 --frame-ms 120
 #
 # Rows 3 to 20 are concentric rings of discs, drawn as a wave of sizes: every
 # disc sits at one of eight points in the cycle 0 2 4 6 7 5 3 1, according

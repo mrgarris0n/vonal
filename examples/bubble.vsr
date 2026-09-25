@@ -5,8 +5,9 @@
 #
 # Row 7 holds the eight values, as the sizes of eight discs. The program sorts
 # that row of the field in place, so the picture rearranges itself into a
-# rising staircase as it runs. `vonal trace examples/bubble.vsr out.gif` shows
-# it happening; examples/bubble.gif is that animation.
+# rising staircase as it runs, and examples/bubble.gif is that animation:
+#
+#     $ vonal trace examples/bubble.vsr bubble.gif --max-steps 2000 --frame-ms 15
 #
 # One counter does the whole sort. k runs 0 to 48 and j = k mod 7, so the 49
 # iterations are seven passes of seven adjacent comparisons, which is enough to
