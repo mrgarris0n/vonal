@@ -10,7 +10,7 @@ from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
-from vonal import decode, isa, notation, render
+from vonal import decode, isa, notation, palette, render
 from vonal.cell import Cell, Plate
 from vonal.errors import VonalError
 from vonal.machine import Machine
@@ -152,19 +152,25 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
             kept.append(frame)
             holds.append(1)
 
-    # A plate uses at most the 8 palette colours, so an adaptive 8-colour
-    # palette is exact. Dithering would invent colours the palette does not
-    # contain, which is the one thing this format must not do.
-    paletted = [
-        f.convert("P", dither=Image.Dither.NONE, palette=Image.Palette.ADAPTIVE, colors=8)
-        for f in kept
-    ]
+    # A frame is drawn in the vonal palette and nothing else, so mapping it
+    # onto that palette is exact. Dithering would invent colours the palette
+    # does not contain, which is the one thing this format must not do.
+    #
+    # One fixed palette for every frame, and optimize=False so Pillow keeps it
+    # rather than trimming each frame to the colours it uses. Either an
+    # adaptive palette per frame or the trimming leaves frames with differing
+    # palettes, which the GIF writer then remaps pixel by pixel onto a common
+    # one; between them that was nearly all of a trace's time.
+    vonal_palette = Image.new("P", (1, 1))
+    vonal_palette.putpalette([channel for rgb in palette.PALETTE for channel in rgb])
+    paletted = [f.quantize(palette=vonal_palette, dither=Image.Dither.NONE) for f in kept]
     paletted[0].save(
         path,
         save_all=True,
         append_images=paletted[1:],
         duration=[h * frame_ms for h in holds],
         loop=0,
+        optimize=False,
     )
 
 
