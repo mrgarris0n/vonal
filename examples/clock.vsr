@@ -1,0 +1,55 @@
+# clock: the time, typeset from a font the plate carries
+#
+#     $ date +%H%M | vonal trace examples/clock.vsr clock.gif --max-steps 6000 --every 100 --frame-ms 60
+#
+# There is no clock in the language, so the time comes in on stdin as four
+# digits, and the plate draws it: the squares that make up each numeral grow
+# to full size in the display across the middle. The colon is authored and
+# never changes. examples/clock.gif is 19:06, the year Vasarely was born.
+#
+# The typeface is in the picture. The ten columns of discs at the bottom are
+# the digits 0 to 9, one column each, and each disc is one row of its numeral
+# as a three-bit number: 7 is a full row, 5 is its two ends, 2 its middle.
+# That is exactly a scale's range, so a row of a glyph fits in the size of one
+# disc, and the program reads it with get and unpacks the bits. Resize a disc
+# and every time that uses that digit is drawn differently.
+#
+# The loop runs sixty times, three columns by five rows by four digits, and
+# every pass decides one square of the display. j counts down from 59, so
+# m = j mod 15 is the square within its digit and j / 15 the digit, which is
+# where the square goes: digit d starts at column 6 + 4*(d + d/2), the d/2
+# opening the gap for the colon. The digit's own value never has to be worked
+# out from a number. The four characters are read up front and left on the
+# stack, the current one just beneath the counter, and after a digit's last
+# square a roll brings the next one up. That roll is branch-free: it rolls 5
+# at a digit boundary and 2 everywhere else, and a roll of 2 is a swap, which
+# the body has just undone.
+#
+# Unpacking a bit needs 4, 2 or 1 for columns 0, 1 and 2, with no power
+# instruction to make them. 4 / (col + 1) is exactly that under integer
+# division, so a bit is (row / (4 / (col + 1))) mod 2, and the square's new
+# size is that times 7: a full-size square or none. No branch anywhere in the
+# body; the only turns are the loop's own.
+
+%plate 31x20
+
++4..  +4..  +4..  +4..  o17.  o24.  >1..  o11.  #2..  %4..  o14.  o26.  #2..  %4..  %1..  o11.  o27.  #5..  %3..  o11.  o27.  #4..  %1..  o12.  #4..  #1..  o14.  #3..  o16.  #1..  v1..
+#12.  #12.  #12.  #12.  #12.  #12.  ^1..  v1..  #4..  %3..  o14.  #1..  o11.  #5..  o13.  %4..  @1..  %3..  %5..  o13.  %5..  o13.  #1..  o26.  o11.  #4..  o13.  %1..  %5..  o13.  <1..
+#12.  #12.  #12.  #12.  #12.  #12.  ^1..  >1..  #4..  o12.  #5..  o17.  #3..  o13.  %5..  %1..  o13.  #5..  o13.  %5..  o13.  #4..  o17.  #1..  o13.  %5..  #1..  %3..  @2..  %3..  v1..
+#12.  #12.  #12.  #12.  #12.  #12.  ^1..  <1..  <1..  <1..  <1..  <1..  <1..  <1..  <1..  <1..  <1..  v3..  %1..  %5..  #1..  o12.  #3..  o13.  D3..  o1..  #5..  o27.  o11.  %4..  <1..
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  ....  #11.  #11.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #11.  #11.  #11.  #11.  #11.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #1..  #1..  #17.  #1..  #1..  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #1..  #1..  #1..  #1..  #1..  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #1..  #1..  #17.  #1..  #1..  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #11.  #11.  #11.  #11.  #11.  #1..  #1..  #1..  #11.  #1..  #1..  #1..  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #11.  #11.  #11.  o17.  o12.  o17.  o17.  o15.  o17.  o17.  o17.  o17.  o17.  #11.  #11.  #11.  #11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  o15.  o16.  o11.  o11.  o15.  o14.  o14.  o11.  o15.  o15.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  o15.  o12.  o17.  o17.  o17.  o17.  o17.  o11.  o17.  o17.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  o15.  o12.  o14.  o11.  o11.  o11.  o15.  o11.  o15.  o11.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  o17.  o17.  o17.  o17.  o11.  o17.  o17.  o11.  o17.  o17.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.
+#12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.  #12.

@@ -785,3 +785,80 @@ def test_the_shipped_ripple_gif_is_not_stale(tmp_path):
     assert shipped == frames(fresh)
     # One frame per pass boundary, the start included, all different.
     assert len(shipped) == len(set(shipped)) == 8
+
+
+CLOCK_FONT = {  # an independent copy: the test must not read the answer off the plate
+    0: [7, 5, 5, 5, 7], 1: [2, 6, 2, 2, 7], 2: [7, 1, 7, 4, 7], 3: [7, 1, 7, 1, 7],
+    4: [5, 5, 7, 1, 1], 5: [7, 4, 7, 1, 7], 6: [7, 4, 7, 5, 7], 7: [7, 1, 1, 1, 1],
+    8: [7, 5, 7, 5, 7], 9: [7, 5, 7, 1, 7],
+}
+CLOCK_DISPLAY_Y, CLOCK_FONT_Y, CLOCK_FONT_X = 7, 14, 10
+CLOCK_STEPS = 6000
+
+
+def clock_digit_x(d):
+    return 6 + 4 * (d + d // 2)
+
+
+def run_clock(plate, time):
+    machine = Machine(plate, stdin=io.StringIO(time + "\n"), stdout=io.StringIO())
+    machine.run(max_steps=CLOCK_STEPS)
+    assert machine.halted and machine.stdout.getvalue() == ""
+    return machine
+
+
+def clock_rows(field, d):
+    """The display's rows for digit d, as the three-bit numbers the font uses."""
+    x0 = clock_digit_x(d)
+    return [
+        sum((field[CLOCK_DISPLAY_Y + r][x0 + c] == 7) << (2 - c) for c in range(3))
+        for r in range(5)
+    ]
+
+
+@pytest.mark.parametrize("time", ["1906", "2147", "0000", "2359", "0815", "1234"])
+def test_clock_draws_the_time_it_is_given(time):
+    machine = run_clock(notation.parse((EXAMPLES / "clock.vsr").read_text()), time)
+    assert [clock_rows(machine.field, d) for d in range(4)] == [
+        CLOCK_FONT[int(ch)] for ch in time
+    ]
+
+
+def test_the_clock_font_is_every_digit_as_rows_of_disc_sizes():
+    plate = notation.parse((EXAMPLES / "clock.vsr").read_text())
+    for digit, rows in CLOCK_FONT.items():
+        column = [plate.at(CLOCK_FONT_X + digit, CLOCK_FONT_Y + r) for r in range(5)]
+        assert all(cell.form is Form.DISC for cell in column)
+        assert [cell.scale for cell in column] == rows
+
+
+def test_the_clock_reads_its_typeface_from_the_picture():
+    # Give the 1 a full top bar and every 1 the clock draws must grow one,
+    # which it can only do if the font is read with get rather than recited.
+    base = notation.parse((EXAMPLES / "clock.vsr").read_text())
+    cell = base.at(CLOCK_FONT_X + 1, CLOCK_FONT_Y)
+    reshaped = base.replaced(
+        CLOCK_FONT_X + 1, CLOCK_FONT_Y, Cell(cell.form, cell.variant, 7, cell.ground)
+    )
+    machine = run_clock(reshaped, "1111")
+    assert all(clock_rows(machine.field, d) == [7, 6, 2, 2, 7] for d in range(4))
+
+
+def test_clock_survives_a_full_image_round_trip():
+    assert round_trips("clock.vsr")
+
+
+def test_the_shipped_clock_gif_is_not_stale(tmp_path, monkeypatch):
+    monkeypatch.setattr("sys.stdin", io.StringIO("1906\n"))
+    fresh = tmp_path / "fresh.gif"
+    assert cli.main([
+        "trace", str(EXAMPLES / "clock.vsr"), str(fresh),
+        "--max-steps", str(CLOCK_STEPS), "--every", "100", "--frame-ms", "60",
+    ]) == 0
+
+    def frames(path):
+        with Image.open(path) as im:
+            return [(f.convert("RGB").tobytes(), f.info.get("duration"))
+                    for f in ImageSequence.Iterator(im)]
+
+    assert frames(EXAMPLES / "clock.gif") == frames(fresh)

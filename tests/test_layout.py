@@ -107,3 +107,30 @@ def test_op_refuses_what_needs_an_immediate_or_a_heading():
     for operation in (Op.PUSH, Op.PUSH_ACC, Op.TURN, Op.HALT):
         with pytest.raises(ValueError):
             op(operation)
+
+
+def plain(width, height, ground=7):
+    return Plate(width, height, tuple(tuple(Cell(Form.DISC, 1, 0, ground) for _ in range(width))
+                                      for _ in range(height)))
+
+
+def test_setup_runs_once_and_leaves_its_values_beneath_the_counter():
+    # The body prints what setup read, under the counter, on every pass.
+    plate = counted_loop(plain(14, 3), 3, [op(Op.OVER), op(Op.OUT_NUM)], setup=[op(Op.IN_NUM)])
+    assert output(plate, stdin="6\n") == "666"
+
+
+@pytest.mark.parametrize("rows", [2, 4, 6])
+def test_a_loop_winds_through_its_rows_and_exits_beneath_them(rows):
+    # A body long enough to reach the last row, so every row of the route runs.
+    body = [op(Op.DUP), op(Op.POP)] * (4 * rows)
+    plate = counted_loop(plain(16, rows + 1), 4, [*body, op(Op.DUP), op(Op.OUT_NUM)], rows=rows)
+    isa.validate(plate)
+    assert output(plate) == "3210"
+    assert sum(plate.at(x, rows).is_void for x in range(16)) == 1
+
+
+@pytest.mark.parametrize("rows", [0, 1, 3])
+def test_a_loop_needs_an_even_number_of_rows(rows):
+    with pytest.raises(ValueError, match="even number of rows"):
+        counted_loop(plain(16, 5), 2, [], rows=rows)
