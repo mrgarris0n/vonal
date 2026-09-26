@@ -1,9 +1,24 @@
 [project]
 name = "vonal"
 version = "0.2.0"
+description = "An esoteric programming language whose source form is an image"
+readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
+keywords = ["esolang", "esoteric", "interpreter", "op-art", "image"]
+classifiers = [
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Interpreters",
+]
 dependencies = ["pillow>=10.0"]
+
+[project.urls]
+Repository = "https://github.com/mrgarris0n/vonal"
+Issues = "https://github.com/mrgarris0n/vonal/issues"
 
 [project.optional-dependencies]
 # ruff and mypy are pinned to a minor series: a new release can add rules or
@@ -14,7 +29,7 @@ dev = ["pytest>=8.0", "hypothesis>=6.100", "ruff>=0.16,<0.17", "mypy>=2.3,<2.4"]
 vonal = "vonal.cli:main"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
