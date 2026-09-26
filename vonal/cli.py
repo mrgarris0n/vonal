@@ -93,7 +93,9 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
-def _trace_frames(machine: Machine, max_steps: int, every: int = 1) -> Iterator[Image.Image]:
+def _trace_frames(
+    machine: Machine, max_steps: int, every: int = 1, eye: bool = False
+) -> Iterator[Image.Image]:
     """The plate as rendered before every `every`-th step, until it halts or hits the cap.
 
     Only a `put` changes the picture, and it changes one cell, so each frame
@@ -106,6 +108,9 @@ def _trace_frames(machine: Machine, max_steps: int, every: int = 1) -> Iterator[
     a sampled trace still ends on the finished picture. When the eye stands on
     a void, the next step halts and cannot change anything, so that is the
     moment to take it.
+
+    With `eye`, each frame also outlines the cell the eye is about to run. The
+    outline goes on a copy, so the unmarked frame stays the base for repaints.
     """
     plate = machine.plate
     frame = render.render(plate)
@@ -126,7 +131,12 @@ def _trace_frames(machine: Machine, max_steps: int, every: int = 1) -> Iterator[
                     cell = plate.at(x, y)
                     render.paint(frame, x, y, Cell(cell.form, cell.variant, value, cell.ground))
                     shown[y][x] = value
-            yield frame
+            if eye:
+                marked = frame.copy()
+                render.mark(marked, machine.x, machine.y)
+                yield marked
+            else:
+                yield frame
         if machine.steps >= max_steps or not machine.step():
             return
 
@@ -177,7 +187,7 @@ def _save_gif(frames: Iterator[Image.Image], path: Path, frame_ms: int) -> None:
 def _cmd_trace(args: argparse.Namespace) -> int:
     machine = Machine(_load(Path(args.plate)))
     out = Path(args.out)
-    frames = _trace_frames(machine, args.max_steps, args.every)
+    frames = _trace_frames(machine, args.max_steps, args.every, args.eye)
     if out.suffix.lower() == ".gif":
         _save_gif(frames, out, args.frame_ms)
     else:
@@ -225,6 +235,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-steps", type=_positive_int, default=1000)
     p.add_argument(
         "--every", type=_positive_int, default=1, help="keep one frame every N steps, plus the last"
+    )
+    p.add_argument(
+        "--eye", action="store_true", help="outline the cell the eye runs next in every frame"
     )
     p.add_argument(
         "--frame-ms", type=int, default=100, help="milliseconds per frame in a .gif"

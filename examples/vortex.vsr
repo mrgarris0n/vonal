@@ -2,6 +2,7 @@
 #
 #     $ vonal run examples/vortex.vsr
 #     vortex
+#     $ vonal trace examples/vortex.vsr vortex.gif --eye --frame-ms 60
 #
 # Every other plate decorates with cells the eye never reaches. Here there are
 # none: the eye starts at (0,0), runs every one of the 225 cells exactly once,

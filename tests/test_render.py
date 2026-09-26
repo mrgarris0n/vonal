@@ -82,3 +82,38 @@ def test_render_is_hard_edged():
     plate = Plate(1, 1, ((Cell(Form.DISC, variant=7, scale=7, ground=2),),))
     for _, colour in render.render(plate).getcolors(maxcolors=100):
         assert palette.index_of(colour) is not None
+
+
+def test_the_eye_marker_stays_clear_of_every_glyph():
+    # The claim mark() rests on: no glyph at any scale reaches the border it
+    # draws in, so marking the eye can never hide what the cell is.
+    c, w = render.CELL, render.MARK_WIDTH
+    for form in Form:
+        if form is Form.VOID:
+            continue
+        for scale in range(8):
+            mask = render.template(form, scale)
+            for i, value in enumerate(mask):
+                x, y = i % c, i // c
+                if value:
+                    assert min(x, y, c - 1 - x, c - 1 - y) >= w, (form, scale, x, y)
+
+
+def test_the_eye_marker_outlines_one_cell_in_palette_colours():
+    plate = Plate(3, 1, (tuple(Cell(Form.SQUARE, 1, 7, g) for g in (0, 1, 2)),))
+    plain = render.render(plate)
+    marked = plain.copy()
+    render.mark(marked, 1, 0)
+    c = render.CELL
+    before, after = plain.tobytes(), marked.tobytes()
+    changed = {
+        (i // 3 % (3 * c), i // 3 // (3 * c))
+        for i in range(0, len(before), 3)
+        if before[i : i + 3] != after[i : i + 3]
+    }
+    # Only the middle cell's border, and some of it on a cream ground too:
+    # the black inner line is what shows there.
+    assert changed and all(c <= x < 2 * c for x, _ in changed)
+    assert all(min(x - c, y, 2 * c - 1 - x, c - 1 - y) < render.MARK_WIDTH for x, y in changed)
+    assert all(palette.index_of(colour) is not None
+               for _, colour in marked.getcolors(maxcolors=100))

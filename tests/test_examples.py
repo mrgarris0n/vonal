@@ -550,6 +550,24 @@ def test_vortex_survives_a_full_image_round_trip():
     assert round_trips("vortex.vsr")
 
 
+def test_the_shipped_vortex_gif_is_not_stale(tmp_path):
+    # Traced with --eye, since the route is the whole picture: without the
+    # marker every frame of this plate would be identical.
+    fresh = tmp_path / "fresh.gif"
+    assert cli.main(
+        ["trace", str(EXAMPLES / "vortex.vsr"), str(fresh), "--eye", "--frame-ms", "60"]
+    ) == 0
+
+    def frames(path):
+        with Image.open(path) as im:
+            return [(f.convert("RGB").tobytes(), f.info.get("duration"))
+                    for f in ImageSequence.Iterator(im)]
+
+    shipped = frames(EXAMPLES / "vortex.gif")
+    assert shipped == frames(fresh)
+    assert len({pixels for pixels, _ in shipped}) == 225
+
+
 def test_the_vortex_eye_runs_every_cell_exactly_once():
     # The plate's whole claim: no cell is decoration the eye never reaches.
     # Visiting a cell twice would mean the spiral loops; missing one would
