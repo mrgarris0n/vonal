@@ -189,6 +189,20 @@ is where an instruction sits: you choose which channel carries the clean
 pattern, and the other one records the code. It prints the sum of all 384
 scales, its own loop included, so resizing any glyph moves the number.
 
+`examples/clock.vsr` typesets the time from a font it carries. The language
+has no clock, so the time arrives on stdin, and the plate draws it:
+
+```bash
+date +%H%M | vonal trace examples/clock.vsr clock.gif --max-steps 6000 --every 100 --frame-ms 60
+```
+
+The ten columns of discs at the bottom are the digits 0 to 9, and each disc
+is one row of its numeral as a three-bit number, which is exactly a scale's
+range: 7 is a full row, 5 its two ends. The program reads a row with `get`,
+unpacks the bits, and grows the matching squares in the display to full size,
+so resizing a disc changes that digit wherever the clock draws it.
+`examples/clock.gif` is 19:06, the year Vasarely was born.
+
 `examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
 scales stop being composition and become the program's input: it prints the
 profile of its own sphere. The same pixels are decoration or data depending only
@@ -244,6 +258,11 @@ must leave it there. Every cell the loop writes keeps its ground, so the
 program wears the picture's colours. `tests/test_layout.py` rebuilds both
 shipped plates with it, which is the check that it lays them out exactly.
 
+A body too long for two rows can wind through more with `rows=4` or any even
+number, and `setup=` runs once before the count is pushed, leaving whatever it
+reads beneath the counter. `clock` uses both: it reads four digits, then loops
+through four rows.
+
 ## Examples
 
 | | Plate | Output |
@@ -264,6 +283,7 @@ shipped plates with it, which is the check that it lays them out exactly.
 | <img src="docs/previews/vortex.png" width="120" height="120" alt="vortex"> | `vortex` | `vortex`, while the eye runs every cell once |
 | <img src="docs/previews/inversion.png" width="102" height="120" alt="inversion"> | `inversion` | nothing; it turns its own bulge inside out |
 | <img src="docs/previews/ripple.png" width="109" height="120" alt="ripple"> | `ripple` | nothing; its rings travel outward, one step per pass |
+| <img src="docs/previews/clock.png" width="186" height="120" alt="clock"> | `clock` | nothing; it draws the time you pipe in, in a typeface it carries |
 | <img src="docs/previews/quine.png" width="72" height="120" alt="quine"> | `quine` | its own source, byte for byte |
 
 ```bash
