@@ -202,6 +202,8 @@ range: 7 is a full row, 5 its two ends. The program reads a row with `get`,
 unpacks the bits, and grows the matching squares in the display to full size,
 so resizing a disc changes that digit wherever the clock draws it.
 `examples/clock.gif` is 19:06, the year Vasarely was born.
+[vonal-clock](https://github.com/mrgarris0n/vonal-clock) runs it on a Raspberry
+Pi with an e-paper panel, redrawn every minute from the Pi's own clock.
 
 `examples/mirror.vsr` inverts the idea. A `get` points at the swell, so those
 scales stop being composition and become the program's input: it prints the
