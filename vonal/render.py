@@ -119,6 +119,28 @@ def paint(image: Image.Image, x: int, y: int, cell: Cell) -> None:
     image.paste(_cell_image(cell), (x * CELL, y * CELL))
 
 
+# The eye marker is two one-pixel lines, cream outside black, so one of them
+# contrasts with any ground. Both lie in the cell's outer MARK_WIDTH pixels,
+# which no glyph reaches (see extent), so marking never hides what a cell is.
+MARK_WIDTH = 2
+_MARK_COLOURS = (palette.rgb(1), palette.rgb(0))
+
+
+def mark(image: Image.Image, x: int, y: int) -> None:
+    """Outline cell (x, y) in place, to show where the eye stands.
+
+    A marked image is a picture of the machine, not of the plate: its corner
+    pixels are no longer ground, so it does not decode.
+    """
+    draw = ImageDraw.Draw(image)
+    left, top = x * CELL, y * CELL
+    for inset, colour in enumerate(_MARK_COLOURS):
+        draw.rectangle(
+            (left + inset, top + inset, left + CELL - 1 - inset, top + CELL - 1 - inset),
+            outline=colour,
+        )
+
+
 def render(plate: Plate) -> Image.Image:
     """Render a Plate as a hard-edged RGB image."""
     image = Image.new("RGB", (plate.width * CELL, plate.height * CELL))

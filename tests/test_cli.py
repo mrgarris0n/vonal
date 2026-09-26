@@ -299,6 +299,26 @@ def test_trace_every_keeps_the_first_and_final_frames_and_drops_the_rest(tmp_pat
             assert a.tobytes() == b.tobytes()
 
 
+def test_trace_eye_marks_the_cell_the_eye_runs_next(tmp_path):
+    # Frame n is the picture before step n, so its marker must sit where the
+    # eye stands before that step, and nothing else about it may change.
+    from vonal.machine import Machine
+
+    plain, marked = tmp_path / "plain", tmp_path / "marked"
+    assert main(["trace", str(KINETIC), str(plain)]) == 0
+    assert main(["trace", str(KINETIC), str(marked), "--eye"]) == 0
+    plain_frames, marked_frames = sorted(plain.glob("*.png")), sorted(marked.glob("*.png"))
+    assert len(plain_frames) == len(marked_frames)
+
+    machine = Machine(notation.parse(KINETIC.read_text()))
+    for plain_png, marked_png in zip(plain_frames, marked_frames, strict=True):
+        with Image.open(plain_png) as a, Image.open(marked_png) as b:
+            expected = a.convert("RGB")
+            render.mark(expected, machine.x, machine.y)
+            assert b.convert("RGB").tobytes() == expected.tobytes(), plain_png.name
+        machine.step()
+
+
 @pytest.mark.parametrize(
     "argv",
     [

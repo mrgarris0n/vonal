@@ -299,6 +299,8 @@ ambiguity at decode time.
 
 **Animation falls out.** A `put` mutates a cell's scale, so the interpreter can
 emit a frame per step, or one every N steps, and dump a run as an animation.
+It can also outline the cell under the eye, in the margin no glyph reaches;
+such a frame pictures the machine rather than the plate, and does not decode.
 
 ## 7. Error handling
 

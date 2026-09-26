@@ -37,6 +37,7 @@ vonal run         plate [--max-steps N]   # accepts .vsr or .png
 vonal trace       plate outdir/       # one PNG frame per step
 vonal trace       plate anim.gif     # or an animated GIF (--frame-ms N)
 vonal trace       plate anim.gif --every N   # one frame every N steps, plus the last
+vonal trace       plate anim.gif --eye       # outline the cell the eye runs next
 vonal --version                       # the installed version
 ```
 
@@ -122,7 +123,9 @@ route. Most of the triangles do nothing: a turn that restates the heading the
 eye already has is a no-op, so a side of a ring can be all triangles and still
 be a straight run, and only the corners and a seam down the diagonal actually
 turn. The first few cells of each ring are discs and a cross instead, and
-between them the seven rings print `vortex`.
+between them the seven rings print `vortex`. A trace of the field alone would
+show nothing happen here, so `examples/vortex.gif` is traced with `--eye`
+(and `--frame-ms 60`), which outlines the cell the eye runs next in every frame.
 
 `examples/kinetic.vsr` goes the other way and writes the field as it runs, so
 `vonal trace` on it produces frames that differ. `examples/kinetic.gif` is that
