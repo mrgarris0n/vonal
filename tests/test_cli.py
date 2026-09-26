@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from importlib.metadata import version
 from pathlib import Path
 
@@ -331,3 +333,12 @@ def test_a_non_numeric_step_count_is_a_usage_error(tmp_path, capsys):
         main(["run", str(src), "--max-steps", "abc"])
     assert exit_info.value.code == 2
     assert "expected a whole number, got 'abc'" in capsys.readouterr().err
+
+
+def test_python_dash_m_runs_the_same_cli():
+    # A subprocess, because the point is the module entry point itself.
+    result = subprocess.run(
+        [sys.executable, "-m", "vonal", "--version"], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert result.stdout.strip() == f"vonal {version('vonal')}"
