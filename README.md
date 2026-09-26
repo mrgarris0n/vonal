@@ -225,6 +225,25 @@ Those cells are therefore read twice, once as themselves and once as digits,
 which is the whole trick and also its cost: resize a disc in the overlap and
 the plate stops describing itself.
 
+## Writing a loop
+
+`inversion` and `ripple` share one program shape: a counted loop that runs
+east along row 0 and back west along row 1, over whatever composition fills
+the rest of the plate. `tools/layout.py` lays it out, so a new plate of that
+kind is a background and a body:
+
+```python
+from tools.layout import counted_loop, op, push
+from vonal.isa import Op
+
+plate = counted_loop(background, 5, [op(Op.DUP), op(Op.OUT_NUM)])  # prints 43210
+```
+
+The body runs with the counter on top of the stack, counting down to 0, and
+must leave it there. Every cell the loop writes keeps its ground, so the
+program wears the picture's colours. `tests/test_layout.py` rebuilds both
+shipped plates with it, which is the check that it lays them out exactly.
+
 ## Examples
 
 | | Plate | Output |
